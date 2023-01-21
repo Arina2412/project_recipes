@@ -6,6 +6,7 @@ import socket
 from Db_classes import *
 from SignupScreen import SignupScreen
 from tkinter import ttk, messagebox
+from MainScreen import MainScreen
 
 
 class StartScreen(tkinter.Tk):
@@ -13,7 +14,7 @@ class StartScreen(tkinter.Tk):
         self.UserDb=UsersDb()
         super().__init__()
 
-        self.geometry("600x700")
+        self.geometry("600x750")
         self.title('Start Screen')
 
         #self.configure(bg="#BCEAD5")
@@ -22,8 +23,8 @@ class StartScreen(tkinter.Tk):
         self.handle_thread_socket()
         self.create_gui()
     def create_gui(self):
-        self.img = Image.open('background.png')
-        self.resized = self.img.resize((600, 700), Image.LANCZOS)
+        self.img = Image.open('photos/background.png')
+        self.resized = self.img.resize((600, 750), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.label_image = Label(self, image=self.image)
         self.label_image.place(x=0, y=0)
@@ -73,7 +74,7 @@ class LoginScreen(tkinter.Toplevel):
         self.create_gui()
 
     def create_gui(self):
-        self.img = Image.open('background.png')
+        self.img = Image.open('photos/background.png')
         self.resized = self.img.resize((600, 700), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.label_image = Label(self, image=self.image)
@@ -86,15 +87,15 @@ class LoginScreen(tkinter.Toplevel):
         self.lblUsernameLogin.place(x=100, y=245)
         self.entryUsernameLogin = Entry(self, width=70)
         self.entryUsernameLogin.place(x=95, y=280)
-        self.entryUsernameLogin.insert(0, "Enter your username...")
-        self.entryUsernameLogin.config(fg="grey")
+        # self.entryUsernameLogin.insert(0, "Enter your username...")
+        # self.entryUsernameLogin.config(fg="grey")
         # ________________________________________________________________________________________________________
         self.lblPasswordLogin = Label(self, text="Password", foreground="Black",background="#C27664",font=("Calibri", 14))
         self.lblPasswordLogin.place(x=100, y=345)
         self.entryPasswordLogin = Entry(self, width=70,show="*")
         self.entryPasswordLogin.place(x=95, y=380)
         # ________________________________________________________________________________________________________
-        self.buttonEnterUserLogin = Button(self, text="Log In", background="#C27664", foreground="white", font=("Calibri", 17),command=self.login_user)
+        self.buttonEnterUserLogin = Button(self, text="Log In", background="#C27664", foreground="white", font=("Calibri", 17),command=self.open_main_screen)
         self.buttonEnterUserLogin .place(x=230, y=450, width=140, height=50)
         # ________________________________________________________________________________________________________
         self.buttonReturnToStartScreen = Button(self, text='Return Back', background="#C27664", foreground="white", font=("Calibri", 14),
@@ -103,11 +104,11 @@ class LoginScreen(tkinter.Toplevel):
         # ________________________________________________________________________________________________________
         self.str = StringVar()
         self.str.set("")
-        Label(self, textvariable=self.str,foreground="red",font=("Calibri", 15)).place(x=250, y=400)
+        Label(self, textvariable=self.str,foreground="red",font=("Calibri", 15)).place(x=240, y=410)
 
     def login_user(self):
         if len(self.entryUsernameLogin.get())==0 and len(self.entryPasswordLogin.get())==0:
-            messagebox.showerror("Please write email and password", "Error")
+            messagebox.showerror("Error", "Please write your username and password")
             return
         print("login")
         if self.UserDb.check_user(self.entryUsernameLogin.get(),self.entryPasswordLogin.get())==False:
@@ -115,9 +116,16 @@ class LoginScreen(tkinter.Toplevel):
             self.str.set(message)
             print(self.str.get())
         else:
-            message2="Welcome"
-            self.str.set(message2)
-            print(self.str.get())
+            print("welcome")
+            # message2="Welcome"
+            # self.str.set(message2)
+            # print(self.str.get())
+            self.open_main_screen()
+
+    def open_main_screen(self):
+        window = MainScreen(self)
+        window.grab_set()
+        self.withdraw()
 
     def return_back(self):
         self.parent.deiconify() #displays the window, after using the withdraw method

@@ -6,7 +6,6 @@ class Server(object):
     def __init__(self,ip,port):
         self.ip=ip
         self.port=port
-        self.FORMAT = 'utf-8'
         self.running=True
         self.count=0
         self.UserDb=UsersDb()
@@ -34,26 +33,32 @@ class Server(object):
         client_handler = threading.Thread(target=self.handle_client_connection, args=(clientSock, current,))
         client_handler.start()
 
-    def handle_client_connection(self, client_socket):
+    def handle_client_connection(self, client_socket,current):
         not_crash = True
         print(not_crash)
         while self.running:
             while not_crash:
                 try:
-                    server_data = client_socket.recv(1024).decode(self.FORMAT)
+                    server_data = client_socket.recv(1024).decode('utf-8')
                     arr=server_data.split(",")
                     print(server_data)
-                    if arr!=None and arr[0]=="SignUp" and len(arr)==4:
+                    if arr!=None and arr[0]=="signup" and len(arr)==4:
                         print("Sign up user")
                         print(arr)
                         server_data=self.UserDb.insert_user(arr[1],arr[2],arr[3])
                         print("Server data: ",server_data)
                         if server_data:
+                            print(server_data)
                             client_socket.send("Signed up successfully".encode())
                         elif server_data:
                             client_socket.send("Sign up failed".encode())
+
+                    elif arr != None and arr[0] == "get_all_users" and len(arr) == 1:
+                        print("get_all_users")
+                        server_data = self.UserDb.get_all_users()
+                        server_data = ",".join(server_data)  # convert data to string
                     else:
-                        server_data="User not found in database"
+                        server_data = "False"
                 except:
                     print("Error")
                     not_crash=False
