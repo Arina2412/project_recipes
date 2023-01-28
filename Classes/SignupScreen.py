@@ -1,17 +1,17 @@
 import threading
 import tkinter
 from tkinter import *
-from tkinter import ttk, messagebox
-from Db_classes import *
+from tkinter import messagebox
+from Classes.Db_classes import *
 from PIL import ImageTk, Image
-from MainScreen import MainScreen
+from Classes.MainScreen import MainScreen
 
 
 class SignupScreen(tkinter.Toplevel):
     def __init__(self,parent):
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x750')
+        self.geometry('600x7')
         self.title('SignUp Screen')
         self.resizable(False, False)
         self.UserDb=UsersDb()
@@ -19,8 +19,8 @@ class SignupScreen(tkinter.Toplevel):
         self.create_gui()
 
     def create_gui(self):
-        self.img = Image.open('photos/background.png')
-        self.resized = self.img.resize((600, 750), Image.LANCZOS)
+        self.img = Image.open('photos/other/background.png')
+        self.resized = self.img.resize((600, 770), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.label_image = Label(self, image=self.image)
         self.label_image.place(x=0, y=0)

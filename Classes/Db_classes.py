@@ -1,10 +1,11 @@
 import sqlite3
 import hashlib
 class RecipesDb(object):
-    def __init__(self, tablename="RecipesDb",recipe_id="recipe_id", recipe_name="recipe_name", category_id="category_id", nutritions="nutritions", cooking_time="cooking_time", description="description"):
+    def __init__(self, tablename="RecipesDb",recipe_id="recipe_id", recipe_name="recipe_name",category_id="category_id", nutritions="nutritions", cooking_time="cooking_time", description="description"):
         self.__tablename=tablename
         self.__recipe_id=recipe_id
         self.__recipe_name=recipe_name
+        # self.__recipe_image=recipe_image
         self.__category_id=category_id
         self.__nutritions=nutritions
         self.__cooking_time=cooking_time
@@ -14,6 +15,7 @@ class RecipesDb(object):
         #print("Database opened successfuly")
         str= "Create table if not exists " + self.__tablename + "(" + self.__recipe_id + " " + "integer primary key autoincrement ,"
         str += " " + self.__recipe_name + " text not null ,"
+        # str += " " + self.__recipe_image + " blob bot null ,"
         str += " " + self.__category_id + " integer not null ,"
         str += " " + self.__nutritions + " text not null ,"
         str += " " + self.__cooking_time + " text not null ,"
@@ -58,20 +60,20 @@ class RecipesDb(object):
         except:
             return "Trouble in DataBase"
 
-    # def get_all_recipes(self):
-    #     conn = sqlite3.connect('project_recipes.db')
-    #     str_get_all_recipes = "Select * from "+ self.__tablename
-    #     cursor = conn.execute(str_get_all_recipes)
-    #     for row in cursor:
-    #         print("recipe_id=", row[0])
-    #         print("recipe_name=", row[1])
-    #         print("category_id=", row[2])
-    #         print("nutritions=", row[3])
-    #         print("cooking_time=", row[4])
-    #         print("description=",row[5])
-    #         print("_____________________________________")
-    #     print("Success")
-    #     conn.close()
+    def get_all_recipes(self):
+        conn = sqlite3.connect('project_recipes.db')
+        str_get_all_recipes = "Select * from "+ self.__tablename
+        cursor = conn.execute(str_get_all_recipes)
+        for row in cursor:
+            print("recipe_id=", row[0])
+            print("recipe_name=", row[1])
+            print("category_id=", row[2])
+            print("nutritions=", row[3])
+            print("cooking_time=", row[4])
+            print("description=",row[5])
+            print("_____________________________________")
+        print("Success")
+        conn.close()
 
     def get_one_recipe2(self):
         conn = sqlite3.connect('project_recipes.db')
@@ -112,6 +114,24 @@ class RecipesDb(object):
         else:
             print("Recipe not exists in table")
             return False
+
+    def get_cooking_time(self,recipe_name):
+        info= ""
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            str_get_num_of_recipes="Select cooking_time from " +self.__tablename+" where "+ self.__recipe_name + "=" + "'" + recipe_name + "'"
+            cursor = conn.execute(str_get_num_of_recipes)
+            rows = cursor.fetchall()
+            #print(len(rows))
+            for row in rows:
+                info = "Cooking time: " + str(row[0])
+                #print(row[0])
+            conn.close()
+            if len(rows) == 0:
+                info = "Recipe is not found in the table"
+            return info
+        except:
+            return "Trouble in DataBase"
 
 class CategoryDb(object):
     def __init__(self, tablename="CategoryDb", category_id="category_id",category_name="category_name",number_of_recipes="number_of_recipes"):

@@ -52,7 +52,6 @@ class Server(object):
                             client_socket.send("Signed up successfully".encode())
                         elif server_data:
                             client_socket.send("Sign up failed".encode())
-
                     elif arr != None and arr[0] == "get_all_users" and len(arr) == 1:
                         print("get_all_users")
                         server_data = self.UserDb.get_all_users()

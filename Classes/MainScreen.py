@@ -1,11 +1,8 @@
 import tkinter
 from tkinter import *
 from PIL import ImageTk, Image
-import threading
-import socket
-from Db_classes import *
-from tkinter import ttk, messagebox
-import sqlite3
+from Classes.Db_classes import *
+from CategoriesScreens import *
 
 
 # def fetch_db():
@@ -18,7 +15,7 @@ class MainScreen(tkinter.Toplevel):
         self.CategoryDb=CategoryDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x750')
+        self.geometry('600x770')
         self.title('Main Screen')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
@@ -31,7 +28,7 @@ class MainScreen(tkinter.Toplevel):
         self.head_frame.pack_propagate(False)
         self.head_frame.configure(height=70)
         #______________________________________________________________________________
-        self.img_search = Image.open('photos/loupe2.png')
+        self.img_search = Image.open('photos/other/loupe2.png')
         self.resized = self.img_search.resize((20, 18), Image.LANCZOS)
         self.image_loupe = ImageTk.PhotoImage(self.resized)
         self.btn_loupe = Button(self.head_frame, image=self.image_loupe, bd=0).place(x=550, y=45)
@@ -47,49 +44,48 @@ class MainScreen(tkinter.Toplevel):
         self.title_lb=Label(self.head_frame,text="Tasty Pages",bg="#658864",fg="white",font=('Calibri',20))
         self.title_lb.place(x=220,y=5)
         #_______________________________________________________________________________
-        self.img_appetizers=Image.open('photos/appetizers.jpg')
+        self.img_appetizers=Image.open('photos/appetizers_recipes/appetizers.jpg')
         self.resized= self.img_appetizers.resize((150,150),Image.LANCZOS)
         self.image=ImageTk.PhotoImage(self.resized)
-        self.btn_appetizers = Button(self,image=self.image,bd=0).place(x=100,y=150)
+        self.btn_appetizers = Button(self,image=self.image,bd=0,command=self.open_appetizers_screen).place(x=100,y=150)
         self.lbl_appetizers=Label(self,text="Appetizers\n"+self.CategoryDb.get_num_of_recipes("Appetizers"),bg="white",fg="#3C6255",
                                   width=21,font=('Calibri',10)).place(x=100,y=280)
         #_______________________________________________________________________________
-        self.img_soups = Image.open('photos/soups.png')
+        self.img_soups = Image.open('photos/soups_recipes/soups.png')
         self.resized = self.img_soups.resize((150, 150), Image.LANCZOS)
         self.image2 = ImageTk.PhotoImage(self.resized)
-        self.btn_soups = Button(self, image=self.image2, bd=0).place(x=330, y=150)
+        self.btn_soups = Button(self, image=self.image2, bd=0,command=self.open_soups_screen).place(x=330, y=150)
         self.lbl_soups = Label(self, text="Soups\n"+self.CategoryDb.get_num_of_recipes("Soups"), bg="white", fg="#3C6255",
                                width=21, font=('Calibri', 10)).place(x=330, y=280)
         #_______________________________________________________________________________
-        self.img_main_dishes = Image.open('photos/main meals.jpeg')
+        self.img_main_dishes = Image.open('photos/main_dishes_recipes/main meals.jpeg')
         self.resized = self.img_main_dishes.resize((150, 150), Image.LANCZOS)
         self.image3 = ImageTk.PhotoImage(self.resized)
-        self.btn_mdishes = Button(self, image=self.image3, bd=0).place(x=100, y=340)
+        self.btn_mdishes = Button(self, image=self.image3, bd=0,command=self.open_main_dishes_screen).place(x=100, y=340)
         self.lbl_mdishes = Label(self, text="Main dishes\n"+self.CategoryDb.get_num_of_recipes("Main Dishes"), bg="white", fg="#3C6255",
                                width=21, font=('Calibri', 10)).place(x=100, y=470)
         # _______________________________________________________________________________
-        self.img_salads = Image.open('photos/salads.jpg')
+        self.img_salads = Image.open('photos/salads_recipes/salads.jpg')
         self.resized = self.img_salads.resize((150, 150), Image.LANCZOS)
         self.image4 = ImageTk.PhotoImage(self.resized)
-        self.btn_salads = Button(self, image=self.image4, bd=0).place(x=330, y=340)
+        self.btn_salads = Button(self, image=self.image4, bd=0,command=self.open_salad_screen).place(x=330, y=340)
         self.lbl_salads = Label(self, text="Salads\n"+self.CategoryDb.get_num_of_recipes("Salads"), bg="white", fg="#3C6255",
                                  width=21, font=('Calibri', 10)).place(x=330, y=470)
         # _______________________________________________________________________________
-        self.img_deserts = Image.open('photos/deserts.jpg')
+        self.img_deserts = Image.open('photos/desserts_recipes/deserts.jpg')
         self.resized = self.img_deserts.resize((150, 150), Image.LANCZOS)
         self.image5 = ImageTk.PhotoImage(self.resized)
-        self.btn_deserts = Button(self, image=self.image5, bd=0).place(x=100, y=530)
-        self.lbl_deserts = Label(self, text="Deserts\n"+self.CategoryDb.get_num_of_recipes("Deserts"), bg="white", fg="#3C6255",
+        self.btn_deserts = Button(self, image=self.image5, bd=0,command=self.open_desserts_screen).place(x=100, y=530)
+        self.lbl_deserts = Label(self, text="Desserts\n"+self.CategoryDb.get_num_of_recipes("Deserts"), bg="white", fg="#3C6255",
                                 width=21, font=('Calibri', 10)).place(x=100, y=660)
         # _______________________________________________________________________________
-        self.img_drinks = Image.open('photos/drinks.png')
+        self.img_drinks = Image.open('photos/drinks_recipes/drinks.png')
         self.resized = self.img_drinks.resize((150, 150), Image.LANCZOS)
         self.image6 = ImageTk.PhotoImage(self.resized)
-        self.btn_drinks = Button(self, image=self.image6, bd=0).place(x=330, y=530)
+        self.btn_drinks = Button(self, image=self.image6, bd=0,command=self.open_drinks_screen).place(x=330, y=530)
         self.lbl_drinks = Label(self, text="Drinks\n"+self.CategoryDb.get_num_of_recipes("Drinks"), bg="white", fg="#3C6255",
                                 width=21, font=('Calibri', 10)).place(x=330, y=660)
         # _______________________________________________________________________________
-
 
 
     def toogle_menu(self):
@@ -135,6 +131,36 @@ class MainScreen(tkinter.Toplevel):
         self.toogle_btn.config(text='X')
         self.toogle_btn.config(command=collapse_toogle_menu)
         #__________________________________________________________________________
+
+    def open_appetizers_screen(self):
+        window = AppetizersScreen(self)
+        window.grab_set()
+        self.withdraw()
+
+    def open_soups_screen(self):
+        window = SoupsScreen(self)
+        window.grab_set()
+        self.withdraw()
+
+    def open_main_dishes_screen(self):
+        window = MainDishesScreen(self)
+        window.grab_set()
+        self.withdraw()
+
+    def open_salad_screen(self):
+        window = SaladsScreen(self)
+        window.grab_set()
+        self.withdraw()
+
+    def open_desserts_screen(self):
+        window = DessertsScreen(self)
+        window.grab_set()
+        self.withdraw()
+
+    def open_drinks_screen(self):
+        window = DrinksScreen(self)
+        window.grab_set()
+        self.withdraw()
 
 
 if __name__ == "__main__":

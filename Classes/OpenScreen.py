@@ -3,10 +3,10 @@ from tkinter import *
 from PIL import ImageTk, Image
 import threading
 import socket
-from Db_classes import *
-from SignupScreen import SignupScreen
-from tkinter import ttk, messagebox
-from MainScreen import MainScreen
+from Classes.Db_classes import *
+from Classes.SignupScreen import SignupScreen
+from tkinter import messagebox
+from Classes.MainScreen import MainScreen
 
 
 class StartScreen(tkinter.Tk):
@@ -14,17 +14,16 @@ class StartScreen(tkinter.Tk):
         self.UserDb=UsersDb()
         super().__init__()
 
-        self.geometry("600x750")
+        self.geometry("600x770")
         self.title('Start Screen')
-
         #self.configure(bg="#BCEAD5")
         self.resizable(False,False)
 
         self.handle_thread_socket()
         self.create_gui()
     def create_gui(self):
-        self.img = Image.open('photos/background.png')
-        self.resized = self.img.resize((600, 750), Image.LANCZOS)
+        self.img = Image.open('photos/other/background.png')
+        self.resized = self.img.resize((600, 770), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.label_image = Label(self, image=self.image)
         self.label_image.place(x=0, y=0)
@@ -65,7 +64,7 @@ class LoginScreen(tkinter.Toplevel):
     def __init__(self,parent):
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x700')
+        self.geometry('600x770')
         self.title('LogIn Screen')
         self.resizable(False, False)
         #self.configure(bg="#BCEAD5")
@@ -74,8 +73,8 @@ class LoginScreen(tkinter.Toplevel):
         self.create_gui()
 
     def create_gui(self):
-        self.img = Image.open('photos/background.png')
-        self.resized = self.img.resize((600, 700), Image.LANCZOS)
+        self.img = Image.open('photos/other/background.png')
+        self.resized = self.img.resize((600, 770), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.label_image = Label(self, image=self.image)
         self.label_image.place(x=0, y=0)
