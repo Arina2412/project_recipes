@@ -3,11 +3,10 @@ from tkinter import *
 from PIL import ImageTk, Image
 import threading
 import socket
-from Classes.Db_classes import *
-from Classes.SignupScreen import SignupScreen
+from Db_classes import *
+from SignupScreen import SignupScreen
 from tkinter import messagebox
-from Classes.MainScreen import MainScreen
-
+from MainScreen import MainScreen
 
 class StartScreen(tkinter.Tk):
     def __init__(self):
@@ -64,6 +63,8 @@ class LoginScreen(tkinter.Toplevel):
     def __init__(self,parent):
         super().__init__(parent)
         self.parent=parent
+
+
         self.geometry('600x770')
         self.title('LogIn Screen')
         self.resizable(False, False)
@@ -94,7 +95,7 @@ class LoginScreen(tkinter.Toplevel):
         self.entryPasswordLogin = Entry(self, width=70,show="*")
         self.entryPasswordLogin.place(x=95, y=380)
         # ________________________________________________________________________________________________________
-        self.buttonEnterUserLogin = Button(self, text="Log In", background="#C27664", foreground="white", font=("Calibri", 17),command=self.open_main_screen)
+        self.buttonEnterUserLogin = Button(self, text="Log In", background="#C27664", foreground="white", font=("Calibri", 17),command=self.handle_add_user)
         self.buttonEnterUserLogin .place(x=230, y=450, width=140, height=50)
         # ________________________________________________________________________________________________________
         self.buttonReturnToStartScreen = Button(self, text='Return Back', background="#C27664", foreground="white", font=("Calibri", 14),
@@ -105,21 +106,28 @@ class LoginScreen(tkinter.Toplevel):
         self.str.set("")
         Label(self, textvariable=self.str,foreground="red",font=("Calibri", 15)).place(x=240, y=410)
 
+    def handle_add_user(self):
+        self.client_handler = threading.Thread(target=self.login_user, args=())
+        self.client_handler.daemon = True
+        self.client_handler.start()
+
     def login_user(self):
         if len(self.entryUsernameLogin.get())==0 and len(self.entryPasswordLogin.get())==0:
             messagebox.showerror("Error", "Please write your username and password")
             return
         print("login")
-        if self.UserDb.check_user(self.entryUsernameLogin.get(),self.entryPasswordLogin.get())==False:
+        arr=["login",self.entryUsernameLogin.get(),self.entryPasswordLogin.get()]
+        str_check = ",".join(arr)
+        print(str_check)
+        self.parent.client_socket.send(str_check.encode())
+        data = self.parent.client_socket.recv(1024).decode()
+        print(data)
+        if data=="Loged In successfully":
+            self.open_main_screen()
+        else:
             message = "Please Sign Up"
             self.str.set(message)
             print(self.str.get())
-        else:
-            print("welcome")
-            # message2="Welcome"
-            # self.str.set(message2)
-            # print(self.str.get())
-            self.open_main_screen()
 
     def open_main_screen(self):
         window = MainScreen(self)
@@ -130,6 +138,8 @@ class LoginScreen(tkinter.Toplevel):
         self.parent.deiconify() #displays the window, after using the withdraw method
         self.destroy()
 
+
 if __name__ == "__main__":
     window = StartScreen()
     window.mainloop()
+
