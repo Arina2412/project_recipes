@@ -9,6 +9,7 @@ class Server(object):
         self.running=True
         self.count=0
         self.UserDb=UsersDb()
+        self.RecipesDb=RecipesDb()
 
     def start(self):
         try:
@@ -52,10 +53,32 @@ class Server(object):
                             client_socket.send("Signed up successfully".encode())
                         elif server_data:
                             client_socket.send("Sign up failed".encode())
+                            #_____________________________________________
+                    elif arr!=None and arr[0]=="login" and len(arr)==3:
+                        print("Login user")
+                        print(arr)
+                        server_data = self.UserDb.check_user(arr[1],arr[2])
+                        print("Server data: ", server_data)
+                        if server_data==True:
+                            print(server_data)
+                            client_socket.send("Loged In successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Log In failed".encode())
+                            # _____________________________________________
                     elif arr != None and arr[0] == "get_all_users" and len(arr) == 1:
                         print("get_all_users")
                         server_data = self.UserDb.get_all_users()
                         server_data = ",".join(server_data)  # convert data to string
+                    elif arr!= None and arr[0] == "get_one_recipe" and len(arr) == 2:
+                        print(arr)
+                        server_data=self.RecipesDb.get_one_recipe(arr[1])
+                        print("Server data: ",server_data)
+                        arr_to_send= "*".join(server_data)
+                        arr_to_send = arr_to_send.encode("utf-8")
+                        if server_data:
+                            client_socket.send(arr_to_send)
+                        elif server_data:
+                            client_socket.send("Search for recipe failed".encode())
                     else:
                         server_data = "False"
                 except:
