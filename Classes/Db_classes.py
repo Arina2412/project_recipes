@@ -1,11 +1,11 @@
 import sqlite3
 import hashlib
 class RecipesDb(object):
-    def __init__(self, tablename="RecipesDb",recipe_id="recipe_id", recipe_name="recipe_name",category_id="category_id", nutritions="nutritions", cooking_time="cooking_time", description="description"):
+    def __init__(self, tablename="RecipesDb",recipe_id="recipe_id", recipe_name="recipe_name",recipe_image_path="recipe_image_path",category_id="category_id", nutritions="nutritions", cooking_time="cooking_time", description="description"):
         self.__tablename=tablename
         self.__recipe_id=recipe_id
         self.__recipe_name=recipe_name
-        # self.__recipe_image=recipe_image
+        self.__recipe_image_path=recipe_image_path
         self.__category_id=category_id
         self.__nutritions=nutritions
         self.__cooking_time=cooking_time
@@ -15,7 +15,7 @@ class RecipesDb(object):
         #print("Database opened successfuly")
         str= "Create table if not exists " + self.__tablename + "(" + self.__recipe_id + " " + "integer primary key autoincrement ,"
         str += " " + self.__recipe_name + " text not null ,"
-        # str += " " + self.__recipe_image + " blob bot null ,"
+        str += " " + self.__recipe_image_path + " text not null ,"
         str += " " + self.__category_id + " integer not null ,"
         str += " " + self.__nutritions + " text not null ,"
         str += " " + self.__cooking_time + " text not null ,"
@@ -25,19 +25,18 @@ class RecipesDb(object):
         conn.commit()
         conn.close()
 
-    def insert_recipe(self, recipe_name, category_id, nutritions, cooking_time, description):
+    def insert_recipe(self, recipe_name, recipe_image_path,category_id, nutritions, cooking_time, description):
+        conn = sqlite3.connect('project_recipes.db')
+        str_insert = "Insert into " + self.__tablename + " (" + self.__recipe_name + "," +self.__recipe_image_path+"," +self.__category_id + "," + self.__nutritions + "," + self.__cooking_time + "," + self.__description + ") values (" + "'" + recipe_name + "'" + "," + "'" +recipe_image_path+"'" + "," + "'"+ str(
+            category_id) + "'" + "," + "'" + nutritions + "'" + "," + "'" + cooking_time + "'" + "," + "'" + description + "');"
         try:
-            conn = sqlite3.connect('project_recipes.db')
-            str_insert = "Insert into " + self.__tablename + " (" + self.__recipe_name + "," + self.__category_id + "," + self.__nutritions + "," + self.__cooking_time + "," + self.__description + ") values (" + "'" + recipe_name + "'" + "," + "'" + str(
-                category_id) + "'" + "," + "'" + nutritions + "'" + "," + "'" + cooking_time + "'" + "," + "'" + description + "');"
-            print(str_insert)
             conn.execute(str_insert)
             conn.commit()
             conn.close()
-            #print("Record created successfully")
+            print("Record created successfully")
             return True
-        except:
-            print("Failed to insert recipe")
+        except Exception as e:
+            print("Failed to insert recipe:", e)
             return False
 
 
@@ -50,7 +49,7 @@ class RecipesDb(object):
             rows = cursor.fetchall()
             print(len(rows))
             for row in rows:
-                info = str(row[0])+"*"+ row[1] +"*"+ row[3] +"*"+ row[4] +"*"+ row[5]
+                info = str(row[0])+"*"+ row[1] +"*"+ row[2]+ "*"+ row[4] +"*"+ row[5] +"*"+ row[6]
                 arr = info.split("*")
                 print(arr)
             conn.close()
@@ -479,15 +478,15 @@ U=UsersDb()
 I=IngredientsDb()
 # U.insert_user("arina@gmail.com","arina24","1234")
 # # #______________________________________________________________________________________________________________________________________
-# R.insert_recipe("Aussie Sausage Rolls",1,"116 calories","40 minutes","Preheat oven to 350°.Combine first 6 ingredients and 3/4 teaspoon paprika. Add sausage; mix lightly but thoroughly. On a lightly floured surface, roll each pastry sheet into an 11x10-1/2-in. Rectangle. Cut lengthwise into 3 strips. Spread 1/2 cup sausage mixture lengthwise down the center of each strip. Fold over sides, pinching edges to seal. Cut each log into 6 pieces. Place on a rack in a 15x10x1-in. pan, seam side down. Sprinkle with remaining 1/4 teaspoon paprika. Bake until golden brown and sausage is no longer pink, 20-25 minutes.")
-# R.insert_recipe("Chicken & Bacon Roll Ups",1,"43 calories","20 minutes","Mix chicken, cream cheese, 1/2 cup salsa and bacon; spread over tortillas. Roll up tightly; wrap. Refrigerate at least 1 hour. Just before serving, unwrap and cut tortillas into 1-in. slices. Serve with remaining salsa.")
-# R.insert_recipe("Party Shrimps",1,"14 calories","25 minutes","In a bowl or shallow dish, combine the first 7 ingredients. Add shrimp; toss to coat. Refrigerate 2 hours. Drain shrimp, discarding marinade. Place shrimp on an ungreased baking sheet. Broil 4 in. from heat until shrimp turn pink, 3-4 minutes on each side.")
-# R.insert_recipe("South-of-the-Border Bruschetta",1,"62 calories","25 minutes","In a small bowl, mix avocados, cilantro, chili peppers and salt. Finely grate zest from limes. Cut limes crosswise in half; squeeze juice from limes. Stir lime zest and juice into avocado mixture. Refrigerate 30 minutes. Preheat broiler. Place bread slices on an ungreased baking sheet. Broil 3-4 in. from heat 1-2 minutes on each side or until golden brown. Top with avocado mixture. If desired, sprinkle with cheese.")
-# #__________________________________________________________________________________________________________________________
-# R.insert_recipe("Asian Chicken Noodle Soup",2,"227 calories","40 minutes","In a Dutch oven, cook chicken in oil over medium heat until no longer pink. Remove and keep warm. In the same pan, saute the carrots, celery and onion until tender. Stir in the broth, teriyaki sauce, garlic sauce and chicken. Bring to a boil. Reduce heat; simmer, uncovered, for 20 minutes. Add the wonton strips, mushrooms, celery leaves, basil and cilantro. Cook and stir for 4-5 minutes or until wonton strips and mushrooms are tender. Sprinkle with green onions.")
-# R.insert_recipe("Tortellini Spinach Soup",2,"177 calories","20 minutes","Place the first 5 ingredients in a 6-qt. stockpot; bring to a boil. Reduce heat; simmer, covered, 10 minutes. Return to a boil. Add tortellini; cook, uncovered, until meatballs are heated through and tortellini are tender, 3-5 minutes, stirring occasionally. Stir in spinach until wilted. Serve immediately. If desired, top with cheese.")
-# R.insert_recipe("Cheesy Potato Soup",2,"296 calories","35 minutes","Melt butter in a Dutch oven over medium-high heat. Add onion; cook and stir until tender, 5 minutes. Add potatoes and water; bring to a boil. Reduce heat; cover and simmer until potatoes are tender, 15 minutes. Stir in the milk, soup, garlic salt and pepper; heat until warmed through. Add cheese; stir until cheese is melted. Sprinkle with parsley.")
-# R.insert_recipe("Onion Cheese Soup",2,"308 calories","25 minutes","In a large saucepan, saute the onion in butter. Stir in the flour, salt and pepper until blended. Gradually add milk. Bring to a boil; cook and stir for 2 minutes or until thickened. Stir in cheese until melted. Serve with croutons and; if desired, top with Parmesan cheese and minced chives.")
+# R.insert_recipe("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage rolls.jpg',1,"116 calories","40 minutes","Preheat oven to 350°.Combine first 6 ingredients and 3/4 teaspoon paprika. Add sausage; mix lightly but thoroughly. On a lightly floured surface, roll each pastry sheet into an 11x10-1/2-in. Rectangle. Cut lengthwise into 3 strips. Spread 1/2 cup sausage mixture lengthwise down the center of each strip. Fold over sides, pinching edges to seal. Cut each log into 6 pieces. Place on a rack in a 15x10x1-in. pan, seam side down. Sprinkle with remaining 1/4 teaspoon paprika. Bake until golden brown and sausage is no longer pink, 20-25 minutes.")
+# R.insert_recipe("Chicken & Bacon Roll Ups",'photos/appetizers_recipes/chicken&bacon roll ups.jpg',1,"43 calories","20 minutes","Mix chicken, cream cheese, 1/2 cup salsa and bacon; spread over tortillas. Roll up tightly; wrap. Refrigerate at least 1 hour. Just before serving, unwrap and cut tortillas into 1-in. slices. Serve with remaining salsa.")
+# R.insert_recipe("Party Shrimps",'photos/appetizers_recipes/party shrimps.jpg',1,"14 calories","25 minutes","In a bowl or shallow dish, combine the first 7 ingredients. Add shrimp; toss to coat. Refrigerate 2 hours. Drain shrimp, discarding marinade. Place shrimp on an ungreased baking sheet. Broil 4 in. from heat until shrimp turn pink, 3-4 minutes on each side.")
+# R.insert_recipe("South-of-the-Border Bruschetta",'photos/appetizers_recipes/south-of-the-border bruschetta.jpg',1,"62 calories","25 minutes","In a small bowl, mix avocados, cilantro, chili peppers and salt. Finely grate zest from limes. Cut limes crosswise in half; squeeze juice from limes. Stir lime zest and juice into avocado mixture. Refrigerate 30 minutes. Preheat broiler. Place bread slices on an ungreased baking sheet. Broil 3-4 in. from heat 1-2 minutes on each side or until golden brown. Top with avocado mixture. If desired, sprinkle with cheese.")
+# # #__________________________________________________________________________________________________________________________
+# R.insert_recipe("Asian Chicken Noodle Soup",'photos/soups_recipes/Asian Chicken Noodle Soup.jpg',2,"227 calories","40 minutes","In a Dutch oven, cook chicken in oil over medium heat until no longer pink. Remove and keep warm. In the same pan, saute the carrots, celery and onion until tender. Stir in the broth, teriyaki sauce, garlic sauce and chicken. Bring to a boil. Reduce heat; simmer, uncovered, for 20 minutes. Add the wonton strips, mushrooms, celery leaves, basil and cilantro. Cook and stir for 4-5 minutes or until wonton strips and mushrooms are tender. Sprinkle with green onions.")
+# R.insert_recipe("Tortellini Spinach Soup",'photos/soups_recipes/Easy Tortellini Spinach Soup.jpg',2,"177 calories","20 minutes","Place the first 5 ingredients in a 6-qt. stockpot; bring to a boil. Reduce heat; simmer, covered, 10 minutes. Return to a boil. Add tortellini; cook, uncovered, until meatballs are heated through and tortellini are tender, 3-5 minutes, stirring occasionally. Stir in spinach until wilted. Serve immediately. If desired, top with cheese.")
+# R.insert_recipe("Cheesy Potato Soup",'photos/soups_recipes/Homemade Cheesy Potato Soup.jpg',2,"296 calories","35 minutes","Melt butter in a Dutch oven over medium-high heat. Add onion; cook and stir until tender, 5 minutes. Add potatoes and water; bring to a boil. Reduce heat; cover and simmer until potatoes are tender, 15 minutes. Stir in the milk, soup, garlic salt and pepper; heat until warmed through. Add cheese; stir until cheese is melted. Sprinkle with parsley.")
+# R.insert_recipe("Onion Cheese Soup",'photos/soups_recipes/Onion Cheese Soup.jpg',2,"308 calories","25 minutes","In a large saucepan, saute the onion in butter. Stir in the flour, salt and pepper until blended. Gradually add milk. Bring to a boil; cook and stir for 2 minutes or until thickened. Stir in cheese until melted. Serve with croutons and; if desired, top with Parmesan cheese and minced chives.")
 # #____________________________________________________________________________________________________________________________
 # R.insert_recipe("Breaded Pork Chops",3)
 # R.insert_recipe("Chicken with Butter Sauce",3)
@@ -516,8 +515,8 @@ I=IngredientsDb()
 # C.insert_category("Salads",5)
 # C.insert_category("Deserts",3)
 # C.insert_category("Drinks",3)
-# # #__________________________________________________________________
-#
+# # # #__________________________________________________________________
+# #
 # I.insert_ingredient("Onion","1 medium",1)
 # I.insert_ingredient("Minced fresh chives","2 tablespoons",1)
 # I.insert_ingredient("Minced fresh basil","2 teaspoons",1)
@@ -534,7 +533,7 @@ I=IngredientsDb()
 # I.insert_ingredient("Salsa","1 cup",2)
 # I.insert_ingredient("Cooked bacon","4 pieces",2)
 # I.insert_ingredient("Flour tortillas","6 pieces",2)
-#_______________________________________________________
+# # _______________________________________________________
 # I.insert_ingredient("Olive oil","1 tablespoon",3)
 # I.insert_ingredient("Brown sugar","1-1/2 teaspoons",3)
 # I.insert_ingredient("Garlic clove","1 piece",3)
