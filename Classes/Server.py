@@ -70,7 +70,7 @@ class Server(object):
                         server_data = self.UserDb.get_all_users()
                         server_data = ",".join(server_data)  # convert data to string
                     elif arr!= None and arr[0] == "get_one_recipe" and len(arr) == 2:
-                        print(arr)
+                        # print(arr)
                         server_data=self.RecipesDb.get_one_recipe(arr[1])
                         print("Server data: ",server_data)
                         arr_to_send= "*".join(server_data)
@@ -79,8 +79,43 @@ class Server(object):
                             client_socket.send(arr_to_send)
                         elif server_data:
                             client_socket.send("Search for recipe failed".encode())
+                    elif arr!= None and arr[0] == "get_email" and len(arr) == 2:
+                        # print(arr)
+                        server_data=self.UserDb.get_email_by_name(arr[1])
+                        print("Server data: ",server_data)
+                        arr_to_send = server_data.encode("utf-8")
+                        if server_data:
+                            client_socket.send(arr_to_send)
+                        elif server_data:
+                            client_socket.send("Search for email failed".encode())
+                    elif arr!=None and arr[0]=="change_email" and len(arr)==3:
+                        print(arr)
+                        server_data=self.UserDb.update_email(arr[1],arr[2])
+                        print("Server data: ",server_data)
+                        if server_data==True:
+                            print(server_data)
+                            client_socket.send("Email changed successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Changing email failed".encode())
+                    elif arr!=None and arr[0]=="change_password" and len(arr)==3:
+                        print(arr)
+                        server_data=self.UserDb.update_password(arr[1],arr[2])
+                        print("Server data: ",server_data)
+                        if server_data==True:
+                            print(server_data)
+                            client_socket.send("Password changed successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Changing password failed".encode())
+
+                    elif arr!=None and arr[0]=="log_out" and len(arr)==1:
+                        client_socket.send("Server is shutting down".encode())
+                        client_socket.close()
+                        self.running = False
+                        self.sock.close()
                     else:
                         server_data = "False"
+
+
                 except:
                     print("Error")
                     not_crash=False
