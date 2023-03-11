@@ -1,52 +1,60 @@
-import tkinter
-from tkinter import *
-from PIL import ImageTk, Image
-from Classes.Db_classes import *
 from RecipesScreen import *
 import threading
-# from OpenScreen import StartScreen
-#
-# StartScreen=StartScreen()
 
-
-def create_recipes_screen(self,arr2,client_socket):
+def create_recipes_screen(self,arr2,client_socket,username):
     for recipe_image, recipe_name,cooking_time, btnX, btnY in arr2:
+        # print(recipe_name)
         image = Image.open(recipe_image).resize((150, 150), Image.LANCZOS)
         image = ImageTk.PhotoImage(image)
         button = Button(self, image=image, text=recipe_name+cooking_time, bg="white", fg="#3C6255", font=('Calibri', 10), bd=0,
-                        command=lambda recipe_name=recipe_name: handle_add(self, recipe_name,client_socket))
-
+                        command=lambda recipe_name=recipe_name: handle_add(self, recipe_name, client_socket,username))
         button.config(compound='top')
         button.image = image
         button.place(x=btnX, y=btnY)
 
-def handle_add(self,recipe_name,client_socket):
-    self.client_handler = threading.Thread(target=get_recipe, args=(self,recipe_name,client_socket))
+def handle_add(self,recipe_name,client_socket,username):
+    self.client_handler = threading.Thread(target=get_recipe, args=(self,recipe_name,client_socket,username))
     self.client_handler.daemon = True
     self.client_handler.start()
 
-def get_recipe(self,name,client_socket):
+def get_recipe(self,name,client_socket,username):
     arr = ["get_one_recipe", name]
-    str_get_recipe = ",".join(arr)
-    print(str_get_recipe)
+    str_get_recipe = "*".join(arr)
+    # print(str_get_recipe)
     client_socket.send(str_get_recipe.encode())
     data = client_socket.recv(1024)
     data=data.decode("utf-8")
     arr=data.split("*")
-    print("place: "+arr[3])
+    # print(arr)
+    # print("place: "+arr[3])
     open_recipes_screen(self,name,arr)
+    # print("Length: "+str(len(arr)))
+    insert_recipe(self,arr,client_socket,username)
 
 def open_recipes_screen(self,recipe_name,data_recipe):
     window = RecipesScreen(self,recipe_name,data_recipe)
     window.grab_set()
     self.withdraw()
 
+def insert_recipe(self,arr,client_socket,username):
+    arr=["insert_recipe",arr[1],arr[2],arr[3],arr[4],arr[5],username]
+    str_insert = "*".join(arr)
+    # print(str_insert)
+    client_socket.send(str_insert.encode())
+    data = client_socket.recv(1024)
+    print(data)
+    if data == "Recipe added to history successfully":
+        return True
+    else:
+        return False
+
+
 class AppetizersScreen(tkinter.Toplevel):
-    def __init__(self,parent):
+    def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
-        print(self.parent.parent.parent.client_socket)
+        # print(self.parent.parent.parent.client_socket)
         self.geometry('600x770')
         self.title('Appetizers Screen')
         self.resizable(False,False)
@@ -58,7 +66,7 @@ class AppetizersScreen(tkinter.Toplevel):
                                ('photos/appetizers_recipes/chicken&bacon roll ups.jpg',"Chicken & Bacon Roll Ups","\n"+self.RecipesDb.get_cooking_time("Chicken & Bacon Roll Ups"),330,150),
                                ('photos/appetizers_recipes/party shrimps.jpg',"Party Shrimps","\n"+self.RecipesDb.get_cooking_time("Party Shrimps"),100,360),
                                ('photos/appetizers_recipes/south-of-the-border bruschetta.jpg',"South-of-Border Bruschetta","\n"+self.RecipesDb.get_cooking_time("South-of-the-Border Bruschetta"),330,360)]
-        create_recipes_screen(self,self.arr_appetizers,self.parent.parent.parent.client_socket)
+        create_recipes_screen(self,self.arr_appetizers,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -81,7 +89,7 @@ class AppetizersScreen(tkinter.Toplevel):
 
 
 class SoupsScreen(tkinter.Toplevel):
-    def __init__(self,parent):
+    def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
@@ -95,7 +103,7 @@ class SoupsScreen(tkinter.Toplevel):
                         ('photos/soups_recipes/Easy Tortellini Spinach Soup.jpg', "Tortellini Spinach Soup","\n"+self.RecipesDb.get_cooking_time("Tortellini Spinach Soup"),330,150),
                         ('photos/soups_recipes/Homemade Cheesy Potato Soup.jpg',"Cheesy Potato Soup","\n"+self.RecipesDb.get_cooking_time("Cheesy Potato Soup"),100,360),
                         ('photos/soups_recipes/Onion Cheese Soup.jpg', "Onion Cheese Soup","\n"+self.RecipesDb.get_cooking_time("Onion Cheese Soup"),330,360)]
-        create_recipes_screen(self,self.arr_soups,self.parent.parent.parent.client_socket)
+        create_recipes_screen(self,self.arr_soups,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -116,7 +124,7 @@ class SoupsScreen(tkinter.Toplevel):
         self.destroy()
 
 class MainDishesScreen(tkinter.Toplevel):
-    def __init__(self,parent):
+    def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
@@ -131,7 +139,7 @@ class MainDishesScreen(tkinter.Toplevel):
                           ('photos/main_dishes_recipes/Parmesan Chicken Breast.jpg', "Parmesan Chicken Breast","\n25 minutes", 100, 360),
                           ('photos/main_dishes_recipes/Ravioli Lasagna.jpg',  "Ravioli Lasagna","\n25 minutes", 330, 360),
                                 ('photos/main_dishes_recipes/Sausage Hash.jpg',"Sausage Hash","\n25 minutes",100,570)]
-        create_recipes_screen(self,self.arr_main_dishes,self.parent.parent.parent.client_socket)
+        create_recipes_screen(self,self.arr_main_dishes,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -152,7 +160,7 @@ class MainDishesScreen(tkinter.Toplevel):
         self.destroy()
 
 class SaladsScreen(tkinter.Toplevel):
-    def __init__(self,parent):
+    def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
@@ -167,7 +175,7 @@ class SaladsScreen(tkinter.Toplevel):
                                 ('photos/salads_recipes/Caprese Salad.jpg',"Caprese Salad","\n25 minutes",100, 360),
                                 ('photos/salads_recipes/Garden Tomato Salad.jpg', "Garden Tomato Salad","\n25 minutes", 330, 360),
                                 ('photos/salads_recipes/Greek Salad.jpg',"Greek Salad","\n25 minutes", 100, 570)]
-        create_recipes_screen(self,self.arr_salads,self.parent.parent.parent.client_socket)
+        create_recipes_screen(self,self.arr_salads,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -188,7 +196,7 @@ class SaladsScreen(tkinter.Toplevel):
         self.destroy()
 
 class DessertsScreen(tkinter.Toplevel):
-    def __init__(self,parent):
+    def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
@@ -201,7 +209,7 @@ class DessertsScreen(tkinter.Toplevel):
         self.arr_desserts = [('photos/desserts_recipes/Berry Dream Cake.jpg', "Berry Dream Cake","\n25 minutes", 100, 150),
                            ('photos/desserts_recipes/Cherry Cream Cheese Tarts.jpg', "Cherry Tarts","\n25 minutes", 330, 150),
                            ('photos/desserts_recipes/Spiced Chocolate Molten Cakes.jpg', "Chocolate Molten Cakes","\n25 minutes", 100, 360)]
-        create_recipes_screen(self,self.arr_desserts,self.parent.parent.parent.client_socket)
+        create_recipes_screen(self,self.arr_desserts,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -222,7 +230,7 @@ class DessertsScreen(tkinter.Toplevel):
         self.destroy()
 
 class DrinksScreen(tkinter.Toplevel):
-    def __init__(self,parent):
+    def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
@@ -235,7 +243,7 @@ class DrinksScreen(tkinter.Toplevel):
         self.arr_drinks = [('photos/drinks_recipes/Citrus Cider Punch.jpg', "Citrus Cider Punch","\n25 minutes", 100, 150),
                              ('photos/drinks_recipes/Cranberry Fizz.jpg', "Cranberry Fizz","\n25 minutes", 330, 150),
                              ('photos/drinks_recipes/Pineapple Iced Tea.jpg',"Pineapple Iced Tea","\n25 minutes", 100,360)]
-        create_recipes_screen(self,self.arr_drinks,self.parent.parent.parent.client_socket)
+        create_recipes_screen(self,self.arr_drinks,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
