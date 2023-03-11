@@ -7,6 +7,7 @@ import textwrap
 class RecipesScreen(tkinter.Toplevel):
     def __init__(self,parent,recipe_name,arr_recipe):
         self.RecipesDb=RecipesDb()
+        self.IngredientsDb=IngredientsDb()
         super().__init__(parent)
         self.parent=parent
         self.geometry('600x770')
@@ -15,8 +16,7 @@ class RecipesScreen(tkinter.Toplevel):
         #________________________________________________________________
         self.recipe_name=recipe_name
         self.arr_recipe=arr_recipe
-        print(self.arr_recipe[3])
-        self.IngredientsDb=IngredientsDb()
+        # print(self.arr_recipe[3])
 
         self.create_gui()
 
@@ -39,7 +39,7 @@ class RecipesScreen(tkinter.Toplevel):
         self.lbl_ingredients = Label(self,text="Ingredients",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=190)
         self.lbl_instructions= Label(self,text="Instructions",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=470)
         #________________________________________________________________________________________________________
-        max_width = 90
+        max_width = 80
         wrapped_text = textwrap.fill(self.arr_recipe[5], width=max_width)
         print(wrapped_text)
 
@@ -56,7 +56,7 @@ class RecipesScreen(tkinter.Toplevel):
         self.cooking_time_text.place(x=150,y=152)
         #______________________________________
         self.instructuons_text=Label(self,text=wrapped_text,foreground="black",bg="#B5D5C5",font=("Calibri", 12))
-        self.instructuons_text.place(x=10,y=500)
+        self.instructuons_text.place(x=30,y=500)
         #______________________________________
         ingredient_list = self.IngredientsDb.get_ingredients_by_recipe_id(self.arr_recipe[0]).split("\n")
         placeY=220
