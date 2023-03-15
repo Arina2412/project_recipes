@@ -11,6 +11,8 @@ class Server(object):
         self.UserDb=UsersDb()
         self.RecipesDb=RecipesDb()
         self.HistoryRecipesDb=HistoryRecipesDb()
+        self.FavoritesRecipesDb=FavoritesRecipesDb()
+        self.SendReceiveRecipesDb=SendReceiveRecipesDb()
 
     def start(self):
         try:
@@ -20,7 +22,7 @@ class Server(object):
             self.sock.listen(3)
 
             while True:
-                print('Waiting for a new client')
+                print(' Waiting for a new client')
                 clientSocket, client_addresses = self.sock.accept()
                 print('New client entered')
                 clientSocket.send('Hello this is server'.encode())
@@ -67,10 +69,6 @@ class Server(object):
                         elif server_data==False:
                             client_socket.send("Log In failed".encode())
                             # _____________________________________________
-                    elif arr != None and arr[0] == "get_all_users" and len(arr) == 1:
-                        print("get_all_users")
-                        server_data = self.UserDb.get_all_users()
-                        server_data = ",".join(server_data)  # convert data to string
 
                     elif arr!= None and arr[0] == "get_one_recipe" and len(arr) == 2:
                         # print(arr)
@@ -150,6 +148,100 @@ class Server(object):
                             arr_to_send = arr_to_send.encode("utf-8")
                             print(arr_to_send)
                             client_socket.send(arr_to_send)
+
+                    elif arr!=None and arr[0] == "insert_recipe_favorites" and len(arr)==7:
+                        print(arr)
+                        server_data=self.FavoritesRecipesDb.insert_recipe(arr[1],arr[2],arr[3],arr[4],arr[5],arr[6])
+                        print("Server data: ", server_data)
+                        if server_data==True:
+                            print(server_data)
+                            client_socket.send("Recipe added to favorites successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Already exists".encode())
+
+                    elif arr != None and arr[0] == "clear_favorites" and len(arr) == 2:
+                        print(arr)
+                        username = arr[1]
+                        print(username)
+                        server_data = self.FavoritesRecipesDb.delete_all_recipes(username)
+                        print("Server data: ", server_data)
+                        if server_data==True:
+                            client_socket.send("Favorites cleared successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Clearing history of favorites failed".encode())
+
+                    elif arr!=None and arr[0]=="get_favorites" and len(arr)==2:
+                        server_data=self.FavoritesRecipesDb.get_all_recipes(arr[1])
+                        print("Server data: ", server_data)
+                        if server_data == 0:
+                            arr = []
+                            info="Clear"
+                            arr = info.split("#")
+                            arr_to_send = "#".join(arr)
+                            arr_to_send = arr_to_send.encode("utf-8")
+                            # print(arr_to_send)
+                            client_socket.send(arr_to_send)
+                        else:
+                            arr_to_send = "#".join(server_data)
+                            arr_to_send = arr_to_send.encode("utf-8")
+                            print(arr_to_send)
+                            client_socket.send(arr_to_send)
+
+                    elif arr!=None and arr[0]=="check_favorite_recipe" and len(arr)==3:
+                        server_data=self.FavoritesRecipesDb.check_recipe(arr[1],arr[2])
+                        print("Server data: ", server_data)
+                        if server_data==True:
+                            client_socket.send("Recipe already exists in table".encode())
+                        elif server_data==False:
+                            client_socket.send("Recipe not exists in table".encode())
+
+                    elif arr!=None and arr[0]=="get_all_users" and len(arr)==2:
+                        server_data=self.UserDb.get_all_users(arr[1])
+                        print("Server data: ", server_data)
+                        arr_to_send = "*".join(server_data)
+                        arr_to_send = arr_to_send.encode("utf-8")
+                        if server_data:
+                            client_socket.send(arr_to_send)
+                        elif server_data=="No users":
+                            client_socket.send("No users exist".encode())
+
+                    elif arr!=None and arr[0] == "insert_recipe_to_send" and len(arr)==8:
+                        print(arr)
+                        server_data=self.SendReceiveRecipesDb.insert_recipe(arr[1],arr[2],arr[3],arr[4],arr[5],arr[6],arr[7])
+                        print("Server data: ", server_data)
+                        if server_data==True:
+                            print(server_data)
+                            client_socket.send("Recipe added to table successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Already exists".encode())
+
+                    elif arr!=None and arr[0]=="get_received_recipes" and len(arr)==2:
+                        server_data=self.SendReceiveRecipesDb.get_all_recipes(arr[1])
+                        print("Server data: ", server_data)
+                        if server_data == 0:
+                            arr = []
+                            info="Clear"
+                            arr = info.split("#")
+                            arr_to_send = "#".join(arr)
+                            arr_to_send = arr_to_send.encode("utf-8")
+                            # print(arr_to_send)
+                            client_socket.send(arr_to_send)
+                        else:
+                            arr_to_send = "#".join(server_data)
+                            arr_to_send = arr_to_send.encode("utf-8")
+                            print(arr_to_send)
+                            client_socket.send(arr_to_send)
+
+                    elif arr != None and arr[0] == "clear_received_recipes" and len(arr) == 2:
+                        print(arr)
+                        username = arr[1]
+                        print(username)
+                        server_data = self.SendReceiveRecipesDb.delete_all_recipes(username)
+                        print("Server data: ", server_data)
+                        if server_data==True:
+                            client_socket.send("Received recipes cleared successfully".encode())
+                        elif server_data==False:
+                            client_socket.send("Clearing history of received recipes failed".encode())
 
                     elif arr!=None and arr[0]=="log_out" and len(arr)==1:
                         client_socket.send("Server is shutting down".encode())
