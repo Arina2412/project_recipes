@@ -1,11 +1,14 @@
 import tkinter
 from tkinter import *
+from tkinter import ttk
 from PIL import ImageTk, Image
 from Classes.Db_classes import *
 import textwrap
+import threading
+from tkinter import messagebox
 
 class RecipesScreen(tkinter.Toplevel):
-    def __init__(self,parent,recipe_name,arr_recipe):
+    def __init__(self,parent,recipe_name,arr_recipe,username):
         self.RecipesDb=RecipesDb()
         self.IngredientsDb=IngredientsDb()
         super().__init__(parent)
@@ -17,6 +20,8 @@ class RecipesScreen(tkinter.Toplevel):
         self.recipe_name=recipe_name
         self.arr_recipe=arr_recipe
         # print(self.arr_recipe[3])
+        self.client_socket=self.parent.parent.parent.parent.client_socket
+        self.username=username
 
         self.create_gui()
 
@@ -66,19 +71,116 @@ class RecipesScreen(tkinter.Toplevel):
             self.btn_ingredients.place(x=30,y=placeY)
             placeY=placeY+25
         #________________________________________________________________________________________________________
-        self.btn_add_to_favorites=Button(self,text="🤍",bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20),command=lambda: toggle_symbol(self.btn_add_to_favorites))
+        text1=""
+        if self.check_recipe(self.client_socket)==True:
+            text1="🖤"
+        elif self.check_recipe(self.client_socket)==False:
+            text1="🤍"
+
+        self.btn_add_to_favorites=Button(self,text=text1,bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20),command=lambda: (toggle_symbol(self.btn_add_to_favorites),self.handle_add(self.arr_recipe,self.client_socket,self.username)))
         self.btn_add_to_favorites.place(x=480,y=290)
         def toggle_symbol(button):
             if button["text"] == "🤍":
-
                 button.config(text="🖤")
-            else:
-                button.config(text="🤍")
+            elif button["text"] == "🖤":
+                messagebox.showinfo("Exists","Recipe already exists in Favorites")
         #________________________________________________________________________________________________________
-        self.btn_share=Button(self,text="🔗",bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20))
+        self.btn_share=Button(self,text="🔗",bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20),command=lambda :self.get_users(self.client_socket))
         self.btn_share.place(x=520,y=290)
 
+    def handle_add(self, arr, client_socket, username):
+        self.client_handler = threading.Thread(target=self.insert_recipe, args=(arr, client_socket, username))
+        self.client_handler.daemon = True
+        self.client_handler.start()
+
+    def insert_recipe(self, arr, client_socket, username):
+        arr = ["insert_recipe_favorites", arr[1], arr[2], arr[3], arr[4], arr[5], username]
+        str_insert = "*".join(arr)
+        # print(str_insert)
+        client_socket.send(str_insert.encode())
+        data = client_socket.recv(1024).decode()
+        print(data)
+        if data == "Recipe added to favorites successfully":
+            return True
+        else:
+            return False
+
+    def check_recipe(self,client_socket):
+        arr=["check_favorite_recipe",self.recipe_name,self.username]
+        str_insert = "*".join(arr)
+        client_socket.send(str_insert.encode())
+        data = client_socket.recv(1024).decode()
+        print(data)
+        if data == "Recipe already exists in table":
+            return True
+        elif data == "Recipe not exists in table":
+            return False
+
+    def get_users(self,client_socket):
+        arr=["get_all_users",self.username]
+        str_get_recipe = "*".join(arr)
+        client_socket.send(str_get_recipe.encode())
+        data = client_socket.recv(1024)
+        data = data.decode("utf-8")
+        arr2 = data.split("*")
+        print(arr2)
+        self.open_choose_screen(arr2)
+
+    def open_choose_screen(self,arr):
+        window = ChooseScreen(self,arr,self.client_socket,self.arr_recipe,self.username)
+        window.grab_set()
 
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+
+class ChooseScreen(tkinter.Toplevel):
+    def __init__(self,parent,arr,client_socket,arr_recipe,from_username):
+        super().__init__(parent)
+        self.parent=parent
+        self.geometry('200x100+500+300')  # set the position of the window to (x=500,y=300)
+        self.resizable(False,False)
+        self.configure(bg="#B5D5C5")
+        self.title('Send')
+        self.arr_users=arr
+        self.client_socket=client_socket
+        self.arr_recipe=arr_recipe
+        self.from_username=from_username
+        #___________________________
+        self.create_gui()
+
+    def create_gui(self):
+        self.combo = ttk.Combobox(self, values=self.arr_users)
+        self.combo.set("Pick an User")
+        self.combo.pack(padx=5, pady=10)
+
+        def on_button_click():
+            selected_option = self.combo.get()
+            # print("Selected option:", selected_option)
+            self.handle_add(self.arr_recipe,self.from_username,selected_option)
+
+        button = Button(self, text="Send", bg="#658864",activebackground="#658864",
+                            activeforeground="white",command=on_button_click)
+        button.pack(padx=5, pady=5)
+
+
+    def handle_add(self, arr, from_username,to_username):
+        self.client_handler = threading.Thread(target=self.insert_recipe, args=(arr, self.client_socket, from_username,to_username))
+        self.client_handler.daemon = True
+        self.client_handler.start()
+
+    def insert_recipe(self, arr, client_socket, from_username, to_username):
+        arr = ["insert_recipe_to_send", arr[1], arr[2], arr[3], arr[4], arr[5],from_username,to_username]
+        str_insert = "*".join(arr)
+        # print(str_insert)
+        client_socket.send(str_insert.encode())
+        data = client_socket.recv(1024).decode()
+        print(data)
+        if data == "Recipe added to table successfully":
+            messagebox.showinfo("Success","Recipe send successfully to user: "+to_username)
+        elif data=="Already exists":
+            messagebox.showinfo("Again","You already send this recipe to user: "+to_username)
+            return False
+        else:
+            messagebox.showerror("Fail","Try again")
