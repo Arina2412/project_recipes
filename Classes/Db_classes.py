@@ -95,13 +95,6 @@ class RecipesDb(object):
             return info
         except:
             return "Trouble in DataBase"
-        # for row in cursor:
-        #     print("recipe_id =", row[0])
-        #     print("recipe_name =", row[1])
-        #     print("category_name =", row[2])
-        #     print("nutritions =", row[3])
-        #     print("cooking_time =", row[4])
-        #     print("description =", row[5])
 
     def delete_recipe(self, recipe_id):
         conn = sqlite3.connect('project_recipes.db')
@@ -142,6 +135,27 @@ class RecipesDb(object):
             return info
         except:
             return "Trouble in DataBase"
+
+    def get_recipe_names(self):
+        info=""
+        arr=[]
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            c = conn.cursor()
+            c.execute("SELECT recipe_name FROM RecipesDb")
+            names = c.fetchall()
+            for name in names:
+                info+=name[0]+"*"
+                arr = info.split("*")
+            conn.close()
+            if len(names) == 0:
+                info = "No recipes in the table"
+            if arr and arr[-1] == "":
+                arr.pop()
+            return arr
+        except:
+            return "Trouble in DataBase"
+
 
 class CategoryDb(object):
     def __init__(self, tablename="CategoryDb", category_id="category_id",category_name="category_name",number_of_recipes="number_of_recipes"):
@@ -302,7 +316,7 @@ class UsersDb(object):
             print(info)
             conn.close()
             if len(rows) == 0:
-                info = "No users"
+                arr[0] = "No users"
             if arr and arr[-1] == "":
                 arr.pop()
             return arr
@@ -430,20 +444,25 @@ class IngredientsDb(object):
 
     def get_ingredients_by_recipe_id(self,recipe_id):
         info = ""
+        arr=[]
         try:
             conn = sqlite3.connect('project_recipes.db')
             str_get_ingredients_same_recipe = "Select * from " + self.__tablename + " where " + self.__recipe_id + "=" + "'" + str(
                 recipe_id) + "'"
             cursor = conn.execute(str_get_ingredients_same_recipe)
             rows = cursor.fetchall()
-            print(len(rows))
+            # print(len(rows))
             for row in rows:
                 info += row[1] + "(" + str(row[2]) + ")" + "\n"
-                print(row[1], row[2])
+                # print(row[1], row[2])
+                arr=info.split("\n")
+            print(arr)
             conn.close()
             if len(rows) == 0:
-                info = "Not found"
-            return info
+                arr[0] = "No ingredients"
+            if arr and arr[-1] == "":
+                arr.pop()
+            return arr
         except:
             return "Trouble on db"
 
@@ -540,7 +559,7 @@ class HistoryRecipesDb(object):
         str += " " + self.__description + " text not null ,"
         str += " " + self.__username + " text not null )"
         conn.execute(str)
-        print("Table created successfully")
+        # print("Table created successfully")
         conn.commit()
         conn.close()
 
@@ -658,7 +677,7 @@ class FavoritesRecipesDb(object):
         str += " " + self.__description + " text not null ,"
         str += " " + self.__username + " text not null )"
         conn.execute(str)
-        print("Table created successfully")
+        # print("Table created successfully")
         conn.commit()
         conn.close()
 
@@ -778,7 +797,7 @@ class SendReceiveRecipesDb(object):
         str += " " + self.__from_username + " text not null ,"
         str += " " + self.__to_username + " text not null )"
         conn.execute(str)
-        print("Table created successfully")
+        # print("Table created successfully")
         conn.commit()
         conn.close()
 
@@ -876,15 +895,106 @@ class SendReceiveRecipesDb(object):
             return False
 
 
+class ShoppingListDb(object):
+    def __init__(self, tablename="ShoppingListDb",ingredient_id="ingredient_id",ingredient_name="ingredient_name",username="username"):
+        self.__tablename=tablename
+        self.__ingredient_id=ingredient_id
+        self.__ingredient_name=ingredient_name
+        self.__username=username
+
+        conn=sqlite3.connect('project_recipes.db')
+        str = "Create table if not exists " + self.__tablename + "(" + self.__ingredient_id + " " + "integer primary key autoincrement ,"
+        str += " " + self.__ingredient_name + " text not null ,"
+        str += " " + self.__username + " text not null )"
+        conn.execute(str)
+        print("Table created successfully")
+        conn.commit()
+        conn.close()
+
+    def insert_ingredient(self, ingredient_name, username):
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            if self.check_ingredient(ingredient_name,username)==False:
+                str_insert = "Insert into " + self.__tablename + " (" + self.__ingredient_name + "," + self.__username + ") values (" + "'" + ingredient_name + "'" + "," + "'" + username +"');"
+                print(str_insert)
+                conn.execute(str_insert)
+                conn.commit()
+                conn.close()
+            else:
+                print("Already exists")
+                return False
+            print("Record created successfully")
+            return True
+        except:
+            print("Failed to insert category")
+            return False
+
+    def get_ingredients_by_username(self,username):
+        info = ""
+        arr=[]
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            str_get_ingredients = "Select * from " + self.__tablename + " where " + self.__username + "=" + "'" + username + "'"
+            # print(str_get_ingredients)
+            cursor = conn.execute(str_get_ingredients)
+            rows = cursor.fetchall()
+            # print(len(rows))
+            for row in rows:
+                info += row[1]+"\n"
+                arr=info.split("\n")
+            # print(arr)
+            conn.close()
+            if len(rows) == 0:
+                return 0
+            if arr and arr[-1] == "":
+                arr.pop()
+            return arr
+        except:
+            return "Trouble on db"
+
+
+    def check_ingredient(self,ingredient_name,username):
+        conn1 = sqlite3.connect('project_recipes.db')
+        str_if_exist = "Select * from " + self.__tablename + " where " + self.__ingredient_name + " = " + "'" + ingredient_name+ "' and "+self.__ingredient_name+" = "+"'"+username+"'"
+        print(str_if_exist)
+        cursor = conn1.execute(str_if_exist)
+        row = cursor.fetchall()
+        if row:
+            print("Ingredient already exists in table")
+            return True
+        else:
+            print("Ingredient not exists in table")
+            return False
+
+    def delete_ingredients_by_name_and_username(self, arr, username):
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            str_delete_ingredients = f"DELETE FROM {self.__tablename} WHERE {self.__username}=? AND {self.__ingredient_name} IN ({','.join(['?'] * len(arr))})"
+            cursor = conn.execute(str_delete_ingredients, [username] + arr)
+            conn.commit()
+            conn.close()
+            if cursor.rowcount > 0:
+                print("Ingredients deleted successfully")
+                return True
+            else:
+                print("No matching ingredients found")
+                return False
+        except:
+            return "Trouble on db"
+
+
+
+
 R=RecipesDb()
 C=CategoryDb()
 U=UsersDb()
 I=IngredientsDb()
 H=HistoryRecipesDb()
 F=FavoritesRecipesDb()
+S=ShoppingListDb()
 
-U.get_all_users("new1")
-print(F.get_all_recipes("new1"))
+# U.get_all_users("new1")
+# print(F.get_all_recipes("new1"))
 # U.insert_user("new2@gmail.com","new2","567")
 # U.insert_user("new3@gmail.com","new3","789")
 
@@ -897,6 +1007,11 @@ print(F.get_all_recipes("new1"))
 # H.insert_recipe("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage rolls.jpg',"116 calories","40 minutes","Preheat oven to 350°.Combine first 6 ingredients and 3/4 teaspoon paprika. Add sausage; mix lightly but thoroughly. On a lightly floured surface, roll each pastry sheet into an 11x10-1/2-in. Rectangle. Cut lengthwise into 3 strips. Spread 1/2 cup sausage mixture lengthwise down the center of each strip. Fold over sides, pinching edges to seal. Cut each log into 6 pieces. Place on a rack in a 15x10x1-in. pan, seam side down. Sprinkle with remaining 1/4 teaspoon paprika. Bake until golden brown and sausage is no longer pink, 20-25 minutes.")
 
 # F.check_recipe("Ravioli Lasagna","arina24")
+
+# print(R.get_recipe_names())
+# arr=["Tomatoes(4 large)","Red onion(1 small)"]
+# S.delete_ingredients_by_name_and_username(arr,"arina24")
+# print(S.get_ingredients_by_username("arina24"))
 
 def insert_rcp(arr):
     for name, image, id_c, nutritions,time,instruction in arr:
@@ -922,7 +1037,7 @@ arr_recipes=[("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage r
             ("Greek Salad",'photos/salads_recipes/Greek Salad.jpg',4,"148 calories","20 minutes","Place tomatoes, cucumbers and onion in a large bowl. In a small bowl, whisk oil, vinegar, salt and pepper and, if desired, oregano until blended. Drizzle over salad; toss to coat. Top with olives and cheese."),
             ("Berry Dream Cake",'photos/desserts_recipes/Berry Dream Cake.jpg',5,"306 calories","45 minutes","Prepare and bake cake mix batter according to package directions, using a greased 13x9-in. baking pan. In a small bowl, add boiling water to gelatin; stir 2 minutes to completely dissolve. Cool cake on a wire rack 3-5 minutes. Using a wooden skewer, pierce holes in top of cake to within 1 in. of edge, twisting skewer gently to make slightly larger holes. Gradually pour gelatin over cake, being careful to fill each hole. Cool 15 minutes. Refrigerate, covered, 30 minutes. In a large bowl, beat cream cheese until fluffy. Fold in whipped topping. Carefully spread over cake. Top with strawberries. Cover and refrigerate for at least 2 hours"),
             ("Cherry Tarts",'photos/desserts_recipes/Cherry Cream Cheese Tarts.jpg',5,"362 calories","10 minutes","In a small bowl, beat the cream cheese, sugar and extract until smooth. Spoon into shells. Top with pie filling. Refrigerate until serving."),
-            ("Chocolate Molten Cakes",'photos/desserts_recipes/Spiced Chocolate Molten Cakes.jpg',5,"560 calories","30 minutes","Preheat oven to 425°. In a microwave, melt butter and chocolate; stir until smooth. Stir in wine and vanilla. In a small bowl, beat the egg, egg yolk and confectioners' sugar until thick and lemon-colored. Beat in the flour, ginger and cinnamon until well blended. Gradually beat in butter mixture. Transfer to 2 greased 6-oz. ramekins or custard cups. Place ramekins on a baking sheet. Bake until a thermometer inserted in the center reads 160° and sides of cakes are set, 10-12 minutes. Remove from the oven and let stand for 1 minute. Run a knife around edges of ramekins; invert onto dessert plates. Dust with additional confectioners' sugar. Serve immediately."),
+            ("Chocolate Molten Cakes",'photos/desserts_recipes/Spiced Chocolate Molten Cakes.jpg',5,"560 calories","30 minutes","Preheat oven to 425°. In a microwave, melt butter and chocolate; stir until smooth. Stir in wine and vanilla. In a small bowl, beat the egg, egg yolk and confectioners sugar until thick and lemon-colored. Beat in the flour, ginger and cinnamon until well blended. Gradually beat in butter mixture. Transfer to 2 greased 6-oz. ramekins or custard cups. Place ramekins on a baking sheet. Bake until a thermometer inserted in the center reads 160° and sides of cakes are set, 10-12 minutes. Remove from the oven and let stand for 1 minute. Run a knife around edges of ramekins; invert onto dessert plates. Dust with additional confectioners sugar. Serve immediately."),
             ("Citrus Cider Punch",'photos/drinks_recipes/Citrus Cider Punch.jpg',6,"138 calories","5 minutes","In a large punch bowl, combine cider and lemonade. Add lemon slices and apple rings. If desired, serve with additional lemon slices and apple rings."),
             ("Cranberry Fizz",'photos/drinks_recipes/Cranberry Fizz.jpg',6,"154 calories","5 minutes + chilling","In a pitcher, combine cranberry, orange and grapefruit juices and sugar. Refrigerate, covered, until chilled. Just before serving, stir in ginger ale. To serve, pour mixture over ice. Garnish with orange slices and cranberries if desired."),
             ("Pineapple Iced Tea",'photos/drinks_recipes/Pineapple Iced Tea.jpg',6,"51 calories","15 minutes","In a large saucepan, bring water to a boil; remove from heat. Add tea bags; steep, covered, 3-5 minutes according to taste. Discard tea bags. Stir in sugar until dissolved. Transfer to a pitcher; cool slightly. Stir in fruit juices. Refrigerate, covered, overnight. Serve over ice. Garnish as desired.")]
