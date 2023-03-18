@@ -1,6 +1,8 @@
 import tkinter
 from tkinter import *
 from tkinter import messagebox
+from PIL import ImageTk, Image
+
 
 class ShoppingListScreen(tkinter.Toplevel):
     def __init__(self, parent,username,arr):
@@ -40,14 +42,26 @@ class ShoppingListScreen(tkinter.Toplevel):
         self.title_lb = Label(self.head_frame, text="Shopping List", bg="#658864", fg="white", font=('Calibri', 20))
         self.title_lb.place(x=220, y=12)
         # _____________________________________________________________________________________________________
-        self.clear_btn = Button(self, text="Clear chosen products", bd=0, background="#658864", foreground="white",
-                                font=("Calibri", 15), activebackground="#658864",
-                                activeforeground="white",
+        self.img_search = Image.open('photos/other/trash can.png')
+        self.resized = self.img_search.resize((30, 30), Image.LANCZOS)
+        self.image_trach_can = ImageTk.PhotoImage(self.resized)
+        self.clear_btn = Button(self.head_frame, image=self.image_trach_can, bd=0, bg="#658864", fg="white",
+                                activebackground="#658864", activeforeground="white",
                                 command=lambda: self.clear_shopping_list(self.list,self.username, self.parent.parent.parent.client_socket))
-        self.clear_btn.place(x=370, y=90)
+        self.clear_btn.place(x=530, y=20)
         # _____________________________________________________________________________________________________
         self.buy_lbl=Label(self,text="To buy:",bg="#B5D5C5",font=("Calibri",15,"underline"))
         self.buy_lbl.place(x=50,y=120)
+        # _____________________________________________________________________________________________________
+        self.add_entry=Entry(self,width=25,font=("Calibri",12))
+        self.add_entry.place(x=300,y=125)
+        self.add_entry.insert(0,"Enter product to add to list...")
+        self.add_entry.config(fg="grey")
+        # _____________________________________________________________________________________________________
+        self.add_btn=Button(self,text="Add to list",font=("Calibri",12),bd=0,bg="#658864",fg="white",
+                            activebackground="#658864", activeforeground="white",
+                            command=lambda: self.insert_ingredient(self.add_entry.get(), self.parent.parent.parent.client_socket,self.username))
+        self.add_btn.place(x=510,y=122)
         # _____________________________________________________________________________________________________
         self.buttonReturnToMainScreen = Button(self.head_frame, text='←', bd=0, background="#658864",
                                                foreground="white",
@@ -87,8 +101,21 @@ class ShoppingListScreen(tkinter.Toplevel):
         data = client_socket.recv(1024).decode()
         print(data)
         if data == "Shopping list cleared successfully":
-            messagebox.showinfo("Success", "Shopping list cleared successfully.\nReset the window")
-        elif data == "Clearing shopping list failed":
+            messagebox.showinfo("Success", "Chosen products cleared successfully.\nReset the window")
+        elif data == "Clearing products failed":
+            messagebox.showerror("Fail", "Try again")
+
+    def insert_ingredient(self,ingredient,client_socket,username):
+        arr = ["insert_ingredient", ingredient, username]
+        str_insert = "*".join(arr)
+        print(str_insert)
+        client_socket.send(str_insert.encode())
+        data = client_socket.recv(1024).decode()
+        if data == "Ingredient added to table successfully":
+            messagebox.showinfo("Success","Product added to list successfully.\nReset the window")
+        elif data=="Already exists":
+            messagebox.showinfo("Exists","Product already exists in the list")
+        else:
             messagebox.showerror("Fail", "Try again")
 
 
