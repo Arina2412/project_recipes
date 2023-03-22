@@ -11,12 +11,12 @@ class ShoppingListScreen(tkinter.Toplevel):
 
         self.geometry('600x770')
         self.title('Shopping List Screen')
+        self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
         self.configure(bg="#B5D5C5")
         self.username=username
         self.arr_ingredients=arr
         self.list=[]
-
 
         if self.arr_ingredients[0]=="Clear":
             self.create_gui()

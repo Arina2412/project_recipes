@@ -1,65 +1,60 @@
-import threading
 import tkinter
 from tkinter import *
 from tkinter import messagebox
-from Classes.Db_classes import *
+from Db_classes import *
 from PIL import ImageTk, Image
-from Classes.MainScreen import MainScreen
+from MainScreen import MainScreen
 
 
 class SignupScreen(tkinter.Toplevel):
     def __init__(self,parent):
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x7')
+        self.geometry('600x770')
         self.title('SignUp Screen')
+        self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
         self.UserDb=UsersDb()
-
         self.create_gui()
 
     def create_gui(self):
+        self.canvas = Canvas(self, width=600, height=770, bd=0, highlightthickness=0)
+        self.canvas.pack()
         self.img = Image.open('photos/other/background.png')
         self.resized = self.img.resize((600, 770), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
-        self.label_image = Label(self, image=self.image)
-        self.label_image.place(x=0, y=0)
+        self.photo = self.canvas.create_image(0, 0, anchor=NW, image=self.image)
         #________________________________________________________________________________________________________
-        self.lblSignup = Label(self, text="Sign Up", foreground="white",background="#658864", font=("Calibri", 30))
-        self.lblSignup.place(x=250, y=150)
+        self.canvas.create_text(300, 200,text="Sign Up",fill="#658864",font=("Calibri",38,"bold"))
         # ________________________________________________________________________________________________________
-        self.lblEmailSignup = Label(self, text="Email", foreground="Black",background="#C27664",font=("Calibri", 14))
-        self.lblEmailSignup.place(x=100, y=245)
+        self.lblEmailSignup = self.canvas.create_text(125,276,text="Email",fill="black",font=("Calibri", 15))
         self.entryEmailSignup1 = Entry(self, width=70)
-        self.entryEmailSignup1.place(x=100, y=280)
+        self.entryEmailSignup1.place(x=100, y=290)
         # self.entryEmailSignup1.insert(0, "Enter your email...")
         # self.entryEmailSignup1.config(fg="grey")
         # ________________________________________________________________________________________________________
-        self.lblUsernameSignup = Label(self, text="Username", foreground="Black",background="#C27664",font=("Calibri", 14))
-        self.lblUsernameSignup.place(x=100, y=325)
+        self.lblUsernameSignup = self.canvas.create_text(140,346,text="Username",fill="black",font=("Calibri", 15))
         self.entryUsernameSignup1 = Entry(self, width=70)
-        self.entryUsernameSignup1 .place(x=100, y=360)
+        self.entryUsernameSignup1.place(x=100, y=360)
         # self.entryUsernameSignup1.insert(0, "Enter your username...")
         # self.entryUsernameSignup1.config(fg="grey")
         # ________________________________________________________________________________________________________
-        self.lblPasswordSignup = Label(self, text="Password", foreground="Black",background="#C27664",font=("Calibri", 14))
-        self.lblPasswordSignup.place(x=100, y=405)
+        self.lblPasswordSignup = self.canvas.create_text(140,426,text="Password",fill="black",font=("Calibri", 15))
         self.entryPasswordSignup1 = Entry(self, width=70)
         self.entryPasswordSignup1.place(x=100, y=440)
         # self.entryPasswordSignup1.insert(0, "Enter your password...")
         # self.entryPasswordSignup1.config(fg="grey")
         # ________________________________________________________________________________________________________
-        self.buttonAddUserSignup = Button(self, text="Sign Up", background="#C27664", foreground="white", font=("Calibri", 17),command=self.handle_add_user)
+        self.buttonAddUserSignup = Button(self, text="Sign Up", background="#C27664", foreground="white", font=("Calibri", 17),command=self.signup_user)
         self.buttonAddUserSignup.place(x=230, y=500, width=140, height=50)
         # ________________________________________________________________________________________________________
         self.buttonReturnToStartScreen2 = Button(self, text='Return Back', background="#C27664", foreground="white",
                                                  font=("Calibri", 14), command=self.return_back)
-        self.buttonReturnToStartScreen2.place(x=245, y=600)
-
-    def handle_add_user(self):
-        self.client_handler = threading.Thread(target=self.signup_user, args=())
-        self.client_handler.daemon = True
-        self.client_handler.start()
+        self.buttonReturnToStartScreen2.place(x=245, y=570)
+        # ________________________________________________________________________________________________________
+        self.str = StringVar()
+        self.str.set("")
+        Label(self, textvariable=self.str, foreground="red", font=("Calibri", 15)).place(x=240, y=410)
 
     def signup_user(self):
         if len(self.entryEmailSignup1.get()) == 0 or len(self.entryPasswordSignup1.get()) == 0 :
@@ -67,18 +62,26 @@ class SignupScreen(tkinter.Toplevel):
             return
         print("signup")
         arr = ["signup", self.entryEmailSignup1.get(), self.entryUsernameSignup1.get(), self.entryPasswordSignup1.get()]
-        str_insert = ",".join(arr)
+        str_insert = "*".join(arr)
         print(str_insert)
         self.parent.client_socket.send(str_insert.encode())
         data = self.parent.client_socket.recv(1024).decode()
         print(data)
-        self.open_main_screen()
+        if data=="Signed up successfully":
+            self.open_main_screen()
+        else:
+            message = "Please Try Again"
+            self.str.set(message)
+            print(self.str.get())
 
     def open_main_screen(self):
-        window = MainScreen(self)
+        window = MainScreen(self,self.entryUsernameSignup1.get())
         window.grab_set()
         self.withdraw()
 
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+
+

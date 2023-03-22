@@ -1,5 +1,3 @@
-import tkinter
-from tkinter import *
 from RecipesScreen import *
 import threading
 from tkinter import messagebox
@@ -10,6 +8,7 @@ class HistoryScreen(tkinter.Toplevel):
         self.parent = parent
         self.geometry('600x770')
         self.title('History Screen')
+        self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
         self.configure(bg="#B5D5C5")
         self.username=username
@@ -19,7 +18,7 @@ class HistoryScreen(tkinter.Toplevel):
             self.str = StringVar()
             message = "History is empty. No recipes have been viewed yet."
             self.str.set(message)
-            Label(self, textvariable=self.str,background="#B5D5C5", foreground="red", font=("Calibri", 15)).place(x=90, y=100)
+            Label(self, textvariable=self.str,background="#B5D5C5", foreground="red", font=("Calibri", 15)).place(x=90, y=130)
         else:
             new_arr = []
             for item in arr:
@@ -37,11 +36,13 @@ class HistoryScreen(tkinter.Toplevel):
         self.title_lb = Label(self.head_frame, text="History", bg="#658864", fg="white", font=('Calibri', 20))
         self.title_lb.place(x=250, y=12)
         # _____________________________________________________________________________________________________
-        self.clear_btn=Button(self,text="Clear history",bd=0, background="#658864",
-                                               foreground="white",
-                                               font=("Calibri", 15), activebackground="#658864",
-                                               activeforeground="white",command=lambda: self.handle_add(self.username,self.parent.parent.parent.client_socket))
-        self.clear_btn.place(x=450,y=700)
+        self.img_search = Image.open('photos/other/trash can.png')
+        self.resized = self.img_search.resize((30, 30), Image.LANCZOS)
+        self.image_trach_can = ImageTk.PhotoImage(self.resized)
+        self.clear_btn = Button(self.head_frame, image=self.image_trach_can, bd=0, bg="#658864", fg="white",
+                                activebackground="#658864", activeforeground="white",
+                                command=lambda: self.clear_history(self.username,self.parent.parent.parent.client_socket))
+        self.clear_btn.place(x=530, y=20)
         # _____________________________________________________________________________________________________
         self.buttonReturnToMainScreen = Button(self.head_frame, text='←', bd=0, background="#658864",
                                                foreground="white",
@@ -75,22 +76,17 @@ class HistoryScreen(tkinter.Toplevel):
             image = ImageTk.PhotoImage(image)
             button = Button(self, image=image, text=recipe_name +"\n"+"Cooking time: "+ cooking_time, bg="white", fg="#3C6255",
                             font=('Calibri', 10), bd=0,
-                            command=lambda count=count: self.open_recipes_screen(recipe_name,self.arr_history[count]))
+                            command=lambda count=count: self.open_recipes_screen(recipe_name,self.arr_history[count],self.username))
             button.config(compound='top')
             button.image = image
             button.place(x=btnX, y=btnY)
             count=count + 1
 
 
-    def open_recipes_screen(self, recipe_name, data_recipe):
-        window = RecipesScreen(self, recipe_name, data_recipe)
+    def open_recipes_screen(self, recipe_name, data_recipe,username):
+        window = RecipesScreen(self, recipe_name, data_recipe,username)
         window.grab_set()
         self.withdraw()
-
-    def handle_add(self,username,client_socket):
-        self.client_handler = threading.Thread(target=self.clear_history, args=(username,client_socket))
-        self.client_handler.daemon = True
-        self.client_handler.start()
 
     def clear_history(self,username,client_socket):
         arr=["clear_history",username]

@@ -1,10 +1,7 @@
 import tkinter
 from tkinter import *
 from PIL import ImageTk, Image
-import threading
 from tkinter import messagebox
-
-
 
 class ProfileScreen(tkinter.Toplevel):
     def __init__(self, parent,username,email):
@@ -15,6 +12,7 @@ class ProfileScreen(tkinter.Toplevel):
 
         self.geometry('600x770')
         self.title('Profile Screen')
+        self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
         self.configure(bg="#B5D5C5")
 
@@ -26,7 +24,7 @@ class ProfileScreen(tkinter.Toplevel):
         self.head_frame.pack_propagate(False)
         self.head_frame.configure(height=70)
         self.title_lb = Label(self.head_frame, text="Profile", bg="#658864", fg="white", font=('Calibri', 20))
-        self.title_lb.place(x=250, y=12)
+        self.title_lb.place(x=260, y=12)
         # _____________________________________________________________________________________________________
         self.canvas=Canvas(self,width=200,height=200,background="#B5D5C5",bd=0,highlightthickness=0)
         self.canvas.place(x=200,y=100)
@@ -55,7 +53,7 @@ class ProfileScreen(tkinter.Toplevel):
         self.en_email.config(fg="grey")
         # _______________________________
         self.btn_change_email=Button(self,text="Change",bg="#658864", fg="white",bd=0, font=('Calibri', 12),
-                               highlightthickness=0,activebackground="#658864", activeforeground="white",command=self.handle_add)
+                               highlightthickness=0,activebackground="#658864", activeforeground="white",command=self.change_email)
         self.btn_change_email.place(x=470,y=469)
         # _______________________________
         self.lbl_change_password=Label(self,text="Change password:",bg="#B5D5C5", fg="black",font=('Calibri', 14,"underline"))
@@ -63,7 +61,7 @@ class ProfileScreen(tkinter.Toplevel):
         # ______________________________
         self.btn_change_password = Button(self, text="Change", bg="#658864", fg="white", bd=0, font=('Calibri', 12),
                                           highlightthickness=0, activebackground="#658864", activeforeground="white",
-                                          command=self.handle_add2)
+                                          command=self.change_password)
         self.btn_change_password.place(x=470, y=539)
         # _______________________________
         self.en_password=Entry(self,width=40,font=('Calibri', 13))
@@ -77,15 +75,9 @@ class ProfileScreen(tkinter.Toplevel):
                                                activeforeground="white", command=self.return_back)
         self.buttonReturnToMainScreen.place(x=5, y=12)
 
-
-    def handle_add(self):
-        self.client_handler = threading.Thread(target=self.change_email, args=())
-        self.client_handler.daemon = True
-        self.client_handler.start()
-
     def change_email(self):
         arr = ["change_email", self.username, self.en_email.get()]
-        str_change = ",".join(arr)
+        str_change = "*".join(arr)
         print(str_change)
         self.parent.parent.parent.client_socket.send(str_change.encode())
         data = self.parent.parent.parent.client_socket.recv(1024).decode()
@@ -95,14 +87,9 @@ class ProfileScreen(tkinter.Toplevel):
         else:
             messagebox.showerror("Error", "Try again")
 
-    def handle_add2(self):
-        self.client_handler = threading.Thread(target=self.change_password, args=())
-        self.client_handler.daemon = True
-        self.client_handler.start()
-
     def change_password(self):
         arr = ["change_password", self.username, self.en_password.get()]
-        str_change = ",".join(arr)
+        str_change = "*".join(arr)
         print(str_change)
         self.parent.parent.parent.client_socket.send(str_change.encode())
         data = self.parent.parent.parent.client_socket.recv(1024).decode()

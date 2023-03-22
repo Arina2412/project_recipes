@@ -60,20 +60,6 @@ class RecipesDb(object):
         except:
             return "Trouble in DataBase"
 
-    def get_all_recipes(self):
-        conn = sqlite3.connect('project_recipes.db')
-        str_get_all_recipes = "Select * from "+ self.__tablename
-        cursor = conn.execute(str_get_all_recipes)
-        for row in cursor:
-            print("recipe_id=", row[0])
-            print("recipe_name=", row[1])
-            print("category_id=", row[2])
-            print("nutritions=", row[3])
-            print("cooking_time=", row[4])
-            print("description=",row[5])
-            print("_____________________________________")
-        print("Success")
-        conn.close()
 
     def get_one_recipe2(self):
         info = ""
@@ -216,7 +202,7 @@ class CategoryDb(object):
             rows = cursor.fetchall()
             #print(len(rows))
             for row in rows:
-                info = "Number of recipes: " + str(row[0])
+                info = str(row[0])
                 #print(row[0])
             conn.close()
             if len(rows) == 0:
@@ -608,7 +594,7 @@ class HistoryRecipesDb(object):
         try:
             conn = sqlite3.connect('project_recipes.db')
             str_get_all_recipes = "Select * from "+ self.__tablename + " where "+ self.__username + "="+ "'"+ username + "'"
-            print(str_get_all_recipes)
+            # print(str_get_all_recipes)
             cursor = conn.execute(str_get_all_recipes)
             rows = cursor.fetchall()
 
@@ -726,7 +712,7 @@ class FavoritesRecipesDb(object):
         try:
             conn = sqlite3.connect('project_recipes.db')
             str_get_all_recipes = "Select * from "+ self.__tablename + " where "+ self.__username + "="+ "'"+ username + "'"
-            print(str_get_all_recipes)
+            # print(str_get_all_recipes)
             cursor = conn.execute(str_get_all_recipes)
             rows = cursor.fetchall()
 
@@ -846,7 +832,7 @@ class SendReceiveRecipesDb(object):
         try:
             conn = sqlite3.connect('project_recipes.db')
             str_get_all_recipes = "Select * from "+ self.__tablename + " where "+ self.__to_username + "="+ "'"+ to_username + "'"
-            print(str_get_all_recipes)
+            # print(str_get_all_recipes)
             cursor = conn.execute(str_get_all_recipes)
             rows = cursor.fetchall()
 
@@ -907,7 +893,7 @@ class ShoppingListDb(object):
         str += " " + self.__ingredient_name + " text not null ,"
         str += " " + self.__username + " text not null )"
         conn.execute(str)
-        print("Table created successfully")
+        # print("Table created successfully")
         conn.commit()
         conn.close()
 

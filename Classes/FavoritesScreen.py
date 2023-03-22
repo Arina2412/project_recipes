@@ -8,6 +8,7 @@ class FavoritesScreen(tkinter.Toplevel):
         # self.username=username
         self.geometry('600x770')
         self.title('Favorites Screen')
+        self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
         self.configure(bg="#B5D5C5")
         self.username = username
@@ -25,7 +26,7 @@ class FavoritesScreen(tkinter.Toplevel):
             # print(new_arr)
             self.arr_favorites = new_arr
             self.create_gui()
-            self.create_recipes_screen()
+            self.create_recipes()
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -35,10 +36,13 @@ class FavoritesScreen(tkinter.Toplevel):
         self.title_lb = Label(self.head_frame, text="Favorites", bg="#658864", fg="white", font=('Calibri', 20))
         self.title_lb.place(x=240, y=12)
         # _____________________________________________________________________________________________________
-        self.clear_btn = Button(self, text="Clear favorites", bd=0, background="#658864",foreground="white",
-                                font=("Calibri", 15), activebackground="#658864",
-                                activeforeground="white",command=lambda: self.handle_add(self.username,self.parent.parent.parent.client_socket))
-        self.clear_btn.place(x=450, y=90)
+        self.img_search = Image.open('photos/other/trash can.png')
+        self.resized = self.img_search.resize((30, 30), Image.LANCZOS)
+        self.image_trach_can = ImageTk.PhotoImage(self.resized)
+        self.clear_btn = Button(self.head_frame, image=self.image_trach_can, bd=0, bg="#658864", fg="white",
+                                activebackground="#658864", activeforeground="white",
+                                command=lambda: self.clear_favorites(self.username,self.parent.parent.parent.client_socket))
+        self.clear_btn.place(x=530, y=20)
         # _____________________________________________________________________________________________________
         self.buttonReturnToMainScreen = Button(self.head_frame, text='←', bd=0, background="#658864",
                                                foreground="white",
@@ -46,7 +50,7 @@ class FavoritesScreen(tkinter.Toplevel):
                                                activeforeground="white", command=self.return_back)
         self.buttonReturnToMainScreen.place(x=5, y=12)
 
-    def create_recipes_screen(self):
+    def create_recipes(self):
         count = 0
         btnX = 0
         btnY = 150
@@ -83,11 +87,6 @@ class FavoritesScreen(tkinter.Toplevel):
         window = RecipesScreen(self, recipe_name, data_recipe, username)
         window.grab_set()
         self.withdraw()
-
-    def handle_add(self, username, client_socket):
-        self.client_handler = threading.Thread(target=self.clear_favorites, args=(username, client_socket))
-        self.client_handler.daemon = True
-        self.client_handler.start()
 
     def clear_favorites(self, username, client_socket):
         arr = ["clear_favorites", username]

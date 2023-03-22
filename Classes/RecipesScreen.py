@@ -2,9 +2,8 @@ import tkinter
 from tkinter import *
 from tkinter import ttk
 from PIL import ImageTk, Image
-from Classes.Db_classes import *
+from Db_classes import *
 import textwrap
-import threading
 from tkinter import messagebox
 
 class RecipesScreen(tkinter.Toplevel):
@@ -14,6 +13,7 @@ class RecipesScreen(tkinter.Toplevel):
         super().__init__(parent)
         self.parent=parent
         self.geometry('600x770')
+        self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
         #________________________________________________________________
@@ -30,7 +30,7 @@ class RecipesScreen(tkinter.Toplevel):
         self.head_frame.pack(side=TOP, fill=X)
         self.head_frame.pack_propagate(False)
         self.head_frame.configure(height=70)
-        self.title_lb = Label(self.head_frame, text=self.recipe_name, bg="#658864", fg="white", font=('Calibri', 20))
+        self.title_lb = Label(self.head_frame, text=self.arr_recipe[1], bg="#658864", fg="white", font=('Calibri', 20))
         self.title_lb.pack(pady=20)
         # _____________________________________________________________________________________________________
         self.buttonReturnToMainScreen = Button(self.head_frame, text='←', bd=0, background="#658864",
@@ -41,8 +41,8 @@ class RecipesScreen(tkinter.Toplevel):
         #_______________________________________________________________________________________________________
         self.lnl_nutrition= Label(self,text="Nutritions: ",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=100)
         self.lbl_cooking_time = Label(self,text="Cooking Time: ",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=150)
-        self.lbl_ingredients = Label(self,text="Ingredients",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=190)
-        self.lbl_instructions= Label(self,text="Instructions",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=470)
+        self.lbl_ingredients = Label(self,text="Ingredients(tap to add to shopping list)",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=190)
+        self.lbl_instructions= Label(self,text="Instructions",foreground="black",bg="#B5D5C5",font=("Calibri", 14,"underline")).place(x=30,y=520)
         #________________________________________________________________________________________________________
         max_width = 80
         wrapped_text = textwrap.fill(self.arr_recipe[5], width=max_width)
@@ -61,13 +61,14 @@ class RecipesScreen(tkinter.Toplevel):
         self.cooking_time_text.place(x=150,y=152)
         #______________________________________
         self.instructuons_text=Label(self,text=wrapped_text,foreground="black",bg="#B5D5C5",font=("Calibri", 12))
-        self.instructuons_text.place(x=30,y=500)
+        self.instructuons_text.place(x=30,y=555)
         #______________________________________
-        ingredient_list = self.IngredientsDb.get_ingredients_by_recipe_id(self.arr_recipe[0]).split("\n")
+        ingredient_list = self.get_ingredients(self.client_socket)
         placeY=220
         for ingredient in ingredient_list:
+            # print("Ingredient:"+ ingredient)
             self.btn_ingredients=Button(self,text=ingredient,foreground="black",bg="#B5D5C5",bd=0,font=("Calibri", 10),
-                                        highlightthickness=0,activebackground="#B5D5C5", activeforeground="black")
+                                        highlightthickness=0,activebackground="#B5D5C5", activeforeground="black",command=lambda ingredient=ingredient: self.insert_ingredient(self.client_socket,ingredient,self.username))
             self.btn_ingredients.place(x=30,y=placeY)
             placeY=placeY+25
         #________________________________________________________________________________________________________
@@ -77,7 +78,7 @@ class RecipesScreen(tkinter.Toplevel):
         elif self.check_recipe(self.client_socket)==False:
             text1="🤍"
 
-        self.btn_add_to_favorites=Button(self,text=text1,bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20),command=lambda: (toggle_symbol(self.btn_add_to_favorites),self.handle_add(self.arr_recipe,self.client_socket,self.username)))
+        self.btn_add_to_favorites=Button(self,text=text1,bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20),command=lambda: (toggle_symbol(self.btn_add_to_favorites),self.insert_recipe(self.arr_recipe,self.client_socket,self.username)))
         self.btn_add_to_favorites.place(x=480,y=290)
         def toggle_symbol(button):
             if button["text"] == "🤍":
@@ -88,10 +89,15 @@ class RecipesScreen(tkinter.Toplevel):
         self.btn_share=Button(self,text="🔗",bg="#B5D5C5",activebackground="#B5D5C5",bd=0,font=("Calibri", 20),command=lambda :self.get_users(self.client_socket))
         self.btn_share.place(x=520,y=290)
 
-    def handle_add(self, arr, client_socket, username):
-        self.client_handler = threading.Thread(target=self.insert_recipe, args=(arr, client_socket, username))
-        self.client_handler.daemon = True
-        self.client_handler.start()
+    def get_ingredients(self, client_socket):
+        arr = ["get_ingredients", self.arr_recipe[0]]
+        str_get_ingredients = "*".join(arr)
+        client_socket.send(str_get_ingredients.encode())
+        data = client_socket.recv(1024)
+        data = data.decode("utf-8")
+        # print(data)
+        arr2 = data.split("*")
+        return arr2
 
     def insert_recipe(self, arr, client_socket, username):
         arr = ["insert_recipe_favorites", arr[1], arr[2], arr[3], arr[4], arr[5], username]
@@ -99,7 +105,7 @@ class RecipesScreen(tkinter.Toplevel):
         # print(str_insert)
         client_socket.send(str_insert.encode())
         data = client_socket.recv(1024).decode()
-        print(data)
+        # print(data)
         if data == "Recipe added to favorites successfully":
             return True
         else:
@@ -110,7 +116,7 @@ class RecipesScreen(tkinter.Toplevel):
         str_insert = "*".join(arr)
         client_socket.send(str_insert.encode())
         data = client_socket.recv(1024).decode()
-        print(data)
+        # print(data)
         if data == "Recipe already exists in table":
             return True
         elif data == "Recipe not exists in table":
@@ -125,6 +131,18 @@ class RecipesScreen(tkinter.Toplevel):
         arr2 = data.split("*")
         print(arr2)
         self.open_choose_screen(arr2)
+
+    def insert_ingredient(self, client_socket, ingredient_name,username):
+        arr = ["insert_ingredient", ingredient_name, username]
+        str_insert = "*".join(arr)
+        print(str_insert)
+        client_socket.send(str_insert.encode())
+        data = client_socket.recv(1024).decode()
+        # print(data)
+        if data == "Ingredient added to table successfully":
+            return True
+        else:
+            return False
 
     def open_choose_screen(self,arr):
         window = ChooseScreen(self,arr,self.client_socket,self.arr_recipe,self.username)
@@ -158,17 +176,11 @@ class ChooseScreen(tkinter.Toplevel):
         def on_button_click():
             selected_option = self.combo.get()
             # print("Selected option:", selected_option)
-            self.handle_add(self.arr_recipe,self.from_username,selected_option)
+            self.insert_recipe(self.arr_recipe,self.client_socket,self.from_username,selected_option)
 
         button = Button(self, text="Send", bg="#658864",activebackground="#658864",
                             activeforeground="white",command=on_button_click)
         button.pack(padx=5, pady=5)
-
-
-    def handle_add(self, arr, from_username,to_username):
-        self.client_handler = threading.Thread(target=self.insert_recipe, args=(arr, self.client_socket, from_username,to_username))
-        self.client_handler.daemon = True
-        self.client_handler.start()
 
     def insert_recipe(self, arr, client_socket, from_username, to_username):
         arr = ["insert_recipe_to_send", arr[1], arr[2], arr[3], arr[4], arr[5],from_username,to_username]
@@ -176,7 +188,7 @@ class ChooseScreen(tkinter.Toplevel):
         # print(str_insert)
         client_socket.send(str_insert.encode())
         data = client_socket.recv(1024).decode()
-        print(data)
+        # print(data)
         if data == "Recipe added to table successfully":
             messagebox.showinfo("Success","Recipe send successfully to user: "+to_username)
         elif data=="Already exists":
@@ -184,3 +196,6 @@ class ChooseScreen(tkinter.Toplevel):
             return False
         else:
             messagebox.showerror("Fail","Try again")
+
+
+
