@@ -1,12 +1,11 @@
 from RecipesScreen import *
-import threading
 from tkinter import messagebox
 
 class HistoryScreen(tkinter.Toplevel):
     def __init__(self, parent,arr,username):
         super().__init__(parent)
         self.parent = parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('History Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
@@ -52,39 +51,50 @@ class HistoryScreen(tkinter.Toplevel):
         # _____________________________________________________________________________________________________
 
     def create_recipes_screen(self):
-        count=0
-        btnX=0
-        btnY=150
+        count = 0
+
+        canvas = Canvas(self, bg="#B5D5C5")
+        canvas.pack(side=LEFT, fill=BOTH, expand=1)
+
+        scrollbar = Scrollbar(self, orient=VERTICAL, command=canvas.yview)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+
+        recipes_frame = Frame(canvas, bg="#B5D5C5")
+        canvas.create_window((0, 0), window=recipes_frame, anchor='nw')
 
         while count < len(self.arr_history) and self.arr_history[count][0] is not None:
-            recipe_name=self.arr_history[count][1]
+            row = count // 2
+            col = count % 2
+
+            recipe_name = self.arr_history[count][1]
             recipe_image = self.arr_history[count][2]
             cooking_time = self.arr_history[count][4]
 
-            # print(recipe_name)
-            count = count + 1
-            if count>2 and count%2!=0:
-                btnY+=210
-            if count%2!=0:
-                btnX = 100
-            elif count%2==0:
-                btnX = 330
-            count=count-1
-            # print(count)
-            # print(self.arr_history[3])
             image = Image.open(recipe_image).resize((150, 150), Image.LANCZOS)
             image = ImageTk.PhotoImage(image)
-            button = Button(self, image=image, text=recipe_name +"\n"+"Cooking time: "+ cooking_time, bg="white", fg="#3C6255",
+            button = Button(recipes_frame, image=image, text=recipe_name + "\n" + "Cooking time: " + cooking_time,
+                            bg="white", fg="#3C6255",
                             font=('Calibri', 10), bd=0,
-                            command=lambda count=count: self.open_recipes_screen(recipe_name,self.arr_history[count],self.username))
+                            command=lambda count=count: self.open_recipes_screen(recipe_name, self.arr_history[count],
+                                                                                 self.username))
             button.config(compound='top')
             button.image = image
-            button.place(x=btnX, y=btnY)
-            count=count + 1
-
+            if count <= 1 and count%2 == 0:
+                button.grid(row=row, column=col, padx=(90,0), pady=(70,10))
+            elif count <= 1 and count%2 != 0:
+                button.grid(row=row, column=col, padx=(35,0), pady=(70,10))
+            elif count > 1 and count % 2 == 0:
+                button.grid(row=row, column=col, padx=(100, 15), pady=(10, 10))
+            elif count > 1 and count % 2 != 0:
+                button.grid(row=row, column=col, padx=(55, 20), pady=(10, 10))
+            # print(recipe_name+str(count))
+            count = count + 1
 
     def open_recipes_screen(self, recipe_name, data_recipe,username):
-        window = RecipesScreen(self, recipe_name, data_recipe,username)
+        window = RecipesScreen(self, recipe_name, data_recipe,username,1)
         window.grab_set()
         self.withdraw()
 

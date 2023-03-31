@@ -6,7 +6,7 @@ class ReceivedRecipesScreen(tkinter.Toplevel):
         super().__init__(parent)
         self.parent = parent
 
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Received Recipes Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
@@ -87,7 +87,7 @@ class ReceivedRecipesScreen(tkinter.Toplevel):
             count = count + 1
 
     def open_recipes_screen(self, recipe_name, data_recipe, username):
-        window = RecipesScreen(self, recipe_name, data_recipe, username)
+        window = RecipesScreen(self, recipe_name, data_recipe, username,1)
         window.grab_set()
         self.withdraw()
 

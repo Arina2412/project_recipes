@@ -9,7 +9,7 @@ class ShoppingListScreen(tkinter.Toplevel):
         super().__init__(parent)
         self.parent = parent
 
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Shopping List Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
@@ -23,7 +23,7 @@ class ShoppingListScreen(tkinter.Toplevel):
             self.str = StringVar()
             message = "Shopping list is empty. No products have been added yet."
             self.str.set(message)
-            Label(self, textvariable=self.str,background="#B5D5C5", foreground="red", font=("Calibri", 15)).place(x=50, y=130)
+            Label(self, textvariable=self.str,background="#B5D5C5", foreground="red", font=("Calibri", 15)).place(x=50, y=180)
         else:
             new_arr = []
             for item in arr:

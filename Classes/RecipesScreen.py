@@ -7,12 +7,12 @@ import textwrap
 from tkinter import messagebox
 
 class RecipesScreen(tkinter.Toplevel):
-    def __init__(self,parent,recipe_name,arr_recipe,username):
+    def __init__(self,parent,recipe_name,arr_recipe,username,check):
         self.RecipesDb=RecipesDb()
         self.IngredientsDb=IngredientsDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
@@ -20,9 +20,13 @@ class RecipesScreen(tkinter.Toplevel):
         self.recipe_name=recipe_name
         self.arr_recipe=arr_recipe
         # print(self.arr_recipe[3])
-        self.client_socket=self.parent.parent.parent.parent.client_socket
+        # self.client_socket=self.parent.parent.parent.parent.client_socket
         self.username=username
 
+        if check==1:
+            self.client_socket=self.parent.parent.parent.parent.client_socket
+        elif check==2:
+            self.client_socket=self.parent.parent.parent.client_socket
         self.create_gui()
 
     def create_gui(self):
@@ -46,7 +50,7 @@ class RecipesScreen(tkinter.Toplevel):
         #________________________________________________________________________________________________________
         max_width = 80
         wrapped_text = textwrap.fill(self.arr_recipe[5], width=max_width)
-        print(wrapped_text)
+        # print(wrapped_text)
 
         self.title(self.arr_recipe[1])
         self.img_recipe = Image.open(self.arr_recipe[2])
@@ -90,7 +94,7 @@ class RecipesScreen(tkinter.Toplevel):
         self.btn_share.place(x=520,y=290)
 
     def get_ingredients(self, client_socket):
-        arr = ["get_ingredients", self.arr_recipe[0]]
+        arr = ["get_ingredients", self.arr_recipe[1]]
         str_get_ingredients = "*".join(arr)
         client_socket.send(str_get_ingredients.encode())
         data = client_socket.recv(1024)

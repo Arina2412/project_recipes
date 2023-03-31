@@ -1,15 +1,26 @@
 from RecipesScreen import *
 
 def create_recipes_screen(self,arr2,client_socket,username):
-    for recipe_image, recipe_name, btnX, btnY in arr2:
-        # print(recipe_name)
+    frame = Frame(self,bg="#B5D5C5")
+    frame.pack(padx=10, pady=10)
+    #puts current index in count
+    for count, (recipe_image, recipe_name) in enumerate(arr2):
+        row = count // 2
+        col = count % 2
         image = Image.open(recipe_image).resize((150, 150), Image.LANCZOS)
         image = ImageTk.PhotoImage(image)
-        button = Button(self, image=image, text=recipe_name, bg="white", fg="#3C6255", font=('Calibri', 10), bd=0,
-                        command=lambda recipe_name=recipe_name: get_recipe(self, recipe_name, client_socket,username))
+        button = Button(frame, image=image, text=recipe_name, bg="white", fg="#3C6255", font=('Calibri', 10), bd=0,
+                        command=lambda recipe_name=recipe_name: get_recipe(self, recipe_name, client_socket, username))
         button.config(compound='top')
         button.image = image
-        button.place(x=btnX, y=btnY)
+        if count <= 1 and count % 2 == 0:
+            button.grid(row=row, column=col, padx=(10, 0), pady=(70, 10))
+        elif count <= 1 and count % 2 != 0:
+            button.grid(row=row, column=col, padx=(25, 0), pady=(70, 10))
+        elif count > 1 and count % 2 == 0:
+            button.grid(row=row, column=col, padx=(20, 15), pady=(10, 10))
+        elif count > 1 and count % 2 != 0:
+            button.grid(row=row, column=col, padx=(45, 20), pady=(10, 10))
 
 
 def get_recipe(self,name,client_socket,username):
@@ -20,19 +31,17 @@ def get_recipe(self,name,client_socket,username):
     data = client_socket.recv(1024)
     data=data.decode("utf-8")
     arr=data.split("*")
-    # print(arr)
-    # print("place: "+arr[3])
     open_recipes_screen(self,name,arr,username)
     # print("Length: "+str(len(arr)))
     insert_recipe(self,arr,client_socket,username)
 
 def open_recipes_screen(self,recipe_name,data_recipe,username):
-    window = RecipesScreen(self,recipe_name,data_recipe,username)
+    window = RecipesScreen(self,recipe_name,data_recipe,username,1)
     window.grab_set()
     self.withdraw()
 
 def insert_recipe(self,arr,client_socket,username):
-    arr=["insert_recipe",arr[1],arr[2],arr[3],arr[4],arr[5],username]
+    arr=["insert_recipe_history",arr[1],arr[2],arr[3],arr[4],arr[5],username]
     str_insert = "*".join(arr)
     # print(str_insert)
     client_socket.send(str_insert.encode())
@@ -43,24 +52,35 @@ def insert_recipe(self,arr,client_socket,username):
     else:
         return False
 
+def get_recipe_image(self,category_id,client_socket):
+    arr = ["get_recipe_name_and_image", str(category_id)]
+    str_get_recipe_name_and_image= "*".join(arr)
+    client_socket.send(str_get_recipe_name_and_image.encode())
+    data = client_socket.recv(1024)
+    data = data.decode("utf-8")
+    arr = data.split("#")
+    print(arr)
+    return arr
+
 class AppetizersScreen(tkinter.Toplevel):
     def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
         # print(self.parent.parent.parent.client_socket)
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Appetizers Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
 
         self.create_gui()
-        self.arr_recipes_names=["Aussie Sausage Rolls","Chicken & Bacon Roll Ups","Party Shrimps","South-of-Border Bruschetta"]
-        self.arr_appetizers = [('photos/appetizers_recipes/aussie sausage rolls.jpg', "Aussie Sausage Rolls",100,150),
-                               ('photos/appetizers_recipes/chicken&bacon roll ups.jpg',"Chicken & Bacon Roll Ups",330,150),
-                               ('photos/appetizers_recipes/party shrimps.jpg',"Party Shrimps",100,360),
-                               ('photos/appetizers_recipes/south-of-the-border bruschetta.jpg',"South-of-Border Bruschetta",330,360)]
+        arr=get_recipe_image(self,1,self.parent.parent.parent.client_socket)
+        self.arr_appetizers=[]
+        for item in arr:
+            if item:
+                name,image_path = item.split("^")
+                self.arr_appetizers.append((image_path,name))
         create_recipes_screen(self,self.arr_appetizers,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
@@ -87,18 +107,20 @@ class SoupsScreen(tkinter.Toplevel):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Soups Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
-        self.arr_soups=[('photos/soups_recipes/Asian Chicken Noodle Soup.jpg', "Asian Chicken Noodle Soup",100,150),
-                        ('photos/soups_recipes/Easy Tortellini Spinach Soup.jpg', "Tortellini Spinach Soup",330,150),
-                        ('photos/soups_recipes/Homemade Cheesy Potato Soup.jpg',"Cheesy Potato Soup",100,360),
-                        ('photos/soups_recipes/Onion Cheese Soup.jpg', "Onion Cheese Soup",330,360)]
-        create_recipes_screen(self,self.arr_soups,self.parent.parent.parent.client_socket,username)
+        arr = get_recipe_image(self, 2, self.parent.parent.parent.client_socket)
+        self.arr_soups = []
+        for item in arr:
+            if item:
+                name, image_path = item.split("^")
+                self.arr_soups.append((image_path, name))
+        create_recipes_screen(self, self.arr_soups, self.parent.parent.parent.client_socket, username)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -123,18 +145,19 @@ class MainDishesScreen(tkinter.Toplevel):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Main Dishes Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
-        self.arr_main_dishes = [('photos/main_dishes_recipes/Breaded Pork Chops.jpg', "Breaded Pork Chops", 100, 150),
-                          ('photos/main_dishes_recipes/Chicken with Butter Sauce.jpg', "Chicken with Butter Sauce", 330, 150),
-                          ('photos/main_dishes_recipes/Parmesan Chicken Breast.jpg', "Parmesan Chicken Breast", 100, 360),
-                          ('photos/main_dishes_recipes/Ravioli Lasagna.jpg',  "Ravioli Lasagna", 330, 360),
-                                ('photos/main_dishes_recipes/Sausage Hash.jpg',"Sausage Hash",100,570)]
+        arr = get_recipe_image(self, 3, self.parent.parent.parent.client_socket)
+        self.arr_main_dishes = []
+        for item in arr:
+            if item:
+                name, image_path = item.split("^")
+                self.arr_main_dishes.append((image_path, name))
         create_recipes_screen(self,self.arr_main_dishes,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
@@ -160,18 +183,19 @@ class SaladsScreen(tkinter.Toplevel):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Salads Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
-        self.arr_salads = [('photos/salads_recipes/Bacon Chicken Chopped Salad.jpg', "Bacon Chopped Salad", 100, 150),
-                                ('photos/salads_recipes/Caesar Salad.jpg',"Caesar Salad",330, 150),
-                                ('photos/salads_recipes/Caprese Salad.jpg',"Caprese Salad",100, 360),
-                                ('photos/salads_recipes/Garden Tomato Salad.jpg', "Garden Tomato Salad", 330, 360),
-                                ('photos/salads_recipes/Greek Salad.jpg',"Greek Salad", 100, 570)]
+        arr = get_recipe_image(self, 4, self.parent.parent.parent.client_socket)
+        self.arr_salads = []
+        for item in arr:
+            if item:
+                name, image_path = item.split("^")
+                self.arr_salads.append((image_path, name))
         create_recipes_screen(self,self.arr_salads,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
@@ -197,16 +221,19 @@ class DessertsScreen(tkinter.Toplevel):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Desserts Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
-        self.arr_desserts = [('photos/desserts_recipes/Berry Dream Cake.jpg', "Berry Dream Cake", 100, 150),
-                           ('photos/desserts_recipes/Cherry Cream Cheese Tarts.jpg', "Cherry Tarts", 330, 150),
-                           ('photos/desserts_recipes/Spiced Chocolate Molten Cakes.jpg', "Chocolate Molten Cakes", 100, 360)]
+        arr = get_recipe_image(self, 5, self.parent.parent.parent.client_socket)
+        self.arr_desserts = []
+        for item in arr:
+            if item:
+                name, image_path = item.split("^")
+                self.arr_desserts.append((image_path, name))
         create_recipes_screen(self,self.arr_desserts,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):
@@ -232,16 +259,19 @@ class DrinksScreen(tkinter.Toplevel):
         self.RecipesDb=RecipesDb()
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Drinks Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
-        self.arr_drinks = [('photos/drinks_recipes/Citrus Cider Punch.jpg', "Citrus Cider Punch", 100, 150),
-                             ('photos/drinks_recipes/Cranberry Fizz.jpg', "Cranberry Fizz", 330, 150),
-                             ('photos/drinks_recipes/Pineapple Iced Tea.jpg',"Pineapple Iced Tea", 100,360)]
+        arr = get_recipe_image(self, 6, self.parent.parent.parent.client_socket)
+        self.arr_drinks = []
+        for item in arr:
+            if item:
+                name, image_path = item.split("^")
+                self.arr_drinks.append((image_path, name))
         create_recipes_screen(self,self.arr_drinks,self.parent.parent.parent.client_socket,username)
 
     def create_gui(self):

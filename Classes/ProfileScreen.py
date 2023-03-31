@@ -10,7 +10,7 @@ class ProfileScreen(tkinter.Toplevel):
         self.username=username
         self.email=email
 
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Profile Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)

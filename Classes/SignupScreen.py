@@ -10,7 +10,7 @@ class SignupScreen(tkinter.Toplevel):
     def __init__(self,parent):
         super().__init__(parent)
         self.parent=parent
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('SignUp Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
@@ -46,33 +46,38 @@ class SignupScreen(tkinter.Toplevel):
         # self.entryPasswordSignup1.config(fg="grey")
         # ________________________________________________________________________________________________________
         self.buttonAddUserSignup = Button(self, text="Sign Up", background="#C27664", foreground="white", font=("Calibri", 17),command=self.signup_user)
-        self.buttonAddUserSignup.place(x=230, y=500, width=140, height=50)
+        self.buttonAddUserSignup.place(x=230, y=550, width=140, height=50)
         # ________________________________________________________________________________________________________
         self.buttonReturnToStartScreen2 = Button(self, text='Return Back', background="#C27664", foreground="white",
                                                  font=("Calibri", 14), command=self.return_back)
-        self.buttonReturnToStartScreen2.place(x=245, y=570)
+        self.buttonReturnToStartScreen2.place(x=245, y=620)
         # ________________________________________________________________________________________________________
         self.str = StringVar()
         self.str.set("")
-        Label(self, textvariable=self.str, foreground="red", font=("Calibri", 15)).place(x=240, y=410)
+        self.lbl_answer = self.canvas.create_text(280, 530, text=self.str.get(), fill="red", font=("Calibri", 15))
 
     def signup_user(self):
-        if len(self.entryEmailSignup1.get()) == 0 or len(self.entryPasswordSignup1.get()) == 0 :
+        if len(self.entryEmailSignup1.get()) == 0 or len(self.entryUsernameSignup1.get())==0 or len(self.entryPasswordSignup1.get()) == 0 :
             messagebox.showerror("Error", "Please write your email,username and password")
             return
-        print("signup")
+        # print("signup")
         arr = ["signup", self.entryEmailSignup1.get(), self.entryUsernameSignup1.get(), self.entryPasswordSignup1.get()]
         str_insert = "*".join(arr)
         print(str_insert)
         self.parent.client_socket.send(str_insert.encode())
         data = self.parent.client_socket.recv(1024).decode()
         print(data)
-        if data=="Signed up successfully":
+        if data == "Signed up successfully":
             self.open_main_screen()
+        elif data == "Already exists":
+            message = "Looks like you already have account\n Log in Please"
+            self.str.set(message)
+            self.canvas.itemconfig(self.lbl_answer, text=self.str.get())
         else:
             message = "Please Try Again"
             self.str.set(message)
-            print(self.str.get())
+            self.canvas.itemconfig(self.lbl_answer, text=self.str.get())
+            # print(self.str.get())
 
     def open_main_screen(self):
         window = MainScreen(self,self.entryUsernameSignup1.get())

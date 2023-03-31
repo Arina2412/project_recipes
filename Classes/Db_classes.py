@@ -1,7 +1,8 @@
 import sqlite3
 import hashlib
 class RecipesDb(object):
-    def __init__(self, tablename="RecipesDb",recipe_id="recipe_id", recipe_name="recipe_name",recipe_image_path="recipe_image_path",category_id="category_id", nutritions="nutritions", cooking_time="cooking_time", description="description"):
+    def __init__(self, tablename="RecipesDb",recipe_id="recipe_id", recipe_name="recipe_name",recipe_image_path="recipe_image_path",
+                 category_id="category_id", nutritions="nutritions", cooking_time="cooking_time", description="description"):
         self.__tablename=tablename
         self.__recipe_id=recipe_id
         self.__recipe_name=recipe_name
@@ -82,6 +83,29 @@ class RecipesDb(object):
         except:
             return "Trouble in DataBase"
 
+
+    def get_name_and_image_by_ctg_id(self,category_id):
+        info= ""
+        arr = []
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            str_get_recipe_name_image = "Select recipe_name, recipe_image_path from " + self.__tablename + " where " + self.__category_id + "=" + "'" + str(
+                category_id) + "'"
+            cursor = conn.execute(str_get_recipe_name_image)
+            rows = cursor.fetchall()
+            for row in rows:
+                info += row[0] + "^" + row[1] + "#"
+                arr = info.split("#")
+                # print(arr)
+            conn.close()
+            if len(rows) == 0:
+                info = "Not found"
+            if arr and arr[-1] == "":
+                arr.pop()
+            return arr
+        except:
+            return "Trouble in DataBase"
+
     def delete_recipe(self, recipe_id):
         conn = sqlite3.connect('project_recipes.db')
         str_delete_recipe = "Delete from " + self.__tablename + "where " + self.__recipe_id + "=" + "'" + str(recipe_id) + "'"
@@ -144,26 +168,28 @@ class RecipesDb(object):
 
 
 class CategoryDb(object):
-    def __init__(self, tablename="CategoryDb", category_id="category_id",category_name="category_name",number_of_recipes="number_of_recipes"):
+    def __init__(self, tablename="CategoryDb", category_id="category_id",category_name="category_name",number_of_recipes="number_of_recipes", category_image="category_image"):
         self.__tablename=tablename
         self.__category_id=category_id
         self.__category_name=category_name
         self.__number_of_recipes=number_of_recipes
+        self.__category_image=category_image
 
         conn = sqlite3.connect('project_recipes.db')
         #print("Database opened successfully")
         str = "Create table if not exists " + self.__tablename + "(" + self.__category_id + " "+ "integer primary key autoincrement ,"
         str+=" " + self.__category_name + " text not null ,"
-        str+=" " + self.__number_of_recipes + " integer not null )"
+        str+=" " + self.__number_of_recipes + " integer not null ,"
+        str+=" " + self.__category_image + " text not null )"
         conn.execute(str)
         # print("Table created successfully")
         conn.commit()
         conn.close()
 
-    def insert_category(self, category_name,number_of_recipes):
+    def insert_category(self, category_name, number_of_recipes, category_image):
         try:
             conn = sqlite3.connect('project_recipes.db')
-            str_insert = "Insert into " + self.__tablename + " (" + self.__category_name + "," + self.__number_of_recipes + ") values (" + "'" + category_name + "'" + "," + "'" + str(number_of_recipes) + "');"
+            str_insert = "Insert into " + self.__tablename + " (" + self.__category_name + "," + self.__number_of_recipes+","+ self.__category_image + ") values (" + "'" + category_name + "'" + "," + "'" + str(number_of_recipes) + "'" + "," + "'" + category_image + "');"
             print(str_insert)
             conn.execute(str_insert)
             conn.commit()
@@ -184,8 +210,8 @@ class CategoryDb(object):
             rows = cursor.fetchall()
             print(len(rows))
             for row in rows:
-                info = "Category Id: " + str(row[0]) + "  Category Name: " + row[1] + "  Number of recipes: " + str(row[2])
-                print(row[0], row[1], row[2])
+                info = "Category Id: " + str(row[0]) + "  Category Name: " + row[1] + "  Number of recipes: " + str(row[2])+" Category image path: "+row[3]
+                # print(row[0], row[1], row[2],row[3])
             conn.close()
             if len(rows) == 0:
                 info = "Category is not found in the table"
@@ -203,6 +229,23 @@ class CategoryDb(object):
             #print(len(rows))
             for row in rows:
                 info = str(row[0])
+                #print(row[0])
+            conn.close()
+            if len(rows) == 0:
+                info = "Category is not found in the table"
+            return info
+        except:
+            return "Trouble in DataBase"
+
+    def get_image_path(self,category_name):
+        info= ""
+        try:
+            conn = sqlite3.connect('project_recipes.db')
+            str_get_image_path="Select category_image from " +self.__tablename+" where "+ self.__category_name + "=" + "'" + category_name + "'"
+            cursor = conn.execute(str_get_image_path)
+            rows = cursor.fetchall()
+            for row in rows:
+                info = row[0]
                 #print(row[0])
             conn.close()
             if len(rows) == 0:
@@ -254,13 +297,17 @@ class UsersDb(object):
     def insert_user(self, user_email, user_name, password):
         try:
             conn = sqlite3.connect('project_recipes.db')
-            salt = "ARINA"
-            md5hash = hashlib.md5(salt.encode('utf-8') + password.encode()).hexdigest()
-            str_insert = "Insert into " + self.__tablename + " (" + self.__user_email + "," + self.__user_name + "," + self.__password + ") values (" + "'" + user_email + "'" + "," + "'" + user_name + "'" + "," + "'" + str(md5hash) + "');"
-            print(str_insert)
-            conn.execute(str_insert)
-            conn.commit()
-            conn.close()
+            if self.check_user(user_name,password)=="Fail":
+                salt = "ARINA"
+                md5hash = hashlib.md5(salt.encode('utf-8') + password.encode()).hexdigest()
+                str_insert = "Insert into " + self.__tablename + " (" + self.__user_email + "," + self.__user_name + "," + self.__password + ") values (" + "'" + user_email + "'" + "," + "'" + user_name + "'" + "," + "'" + str(md5hash) + "');"
+                print(str_insert)
+                conn.execute(str_insert)
+                conn.commit()
+                conn.close()
+            else:
+                print("Already exists")
+                return "Exists"
             print("Record created successfully")
             return True
         except:
@@ -327,22 +374,24 @@ class UsersDb(object):
         except:
             return "Trouble in DataBase"
 
-
-    def check_user(self,user_name, password):
+    def check_user(self, user_name, password):
         conn = sqlite3.connect('project_recipes.db')
         salt = "ARINA"
         md5hash = hashlib.md5(salt.encode('utf-8') + password.encode()).hexdigest()
-        str_is_exist = "SELECT * from " + self.__tablename + " where " + self.__user_name + " = '" + user_name + "' and " + self.__password + " = '" + str(
-            md5hash) + "'"
-        print(str_is_exist)
-        cursor = conn.execute(str_is_exist)
-        row = cursor.fetchall()
+        str_is_exist = "SELECT * from " + self.__tablename + " where " + self.__user_name + " = ?"
+        cursor = conn.execute(str_is_exist, (user_name,))
+        row = cursor.fetchone()
         if row:
-            print("User is exist in table")
-            return True
+            stored_password = row[3]
+            if row[2] == user_name and stored_password == md5hash:
+                print("User is exist in table")
+                return True
+            elif row[2] == user_name and stored_password != md5hash:
+                print("Wrong password")
+                return False
         else:
             print("User is not exist in table")
-            return False
+            return "Fail"
 
     def update_email(self,username,user_email):
         try:
@@ -376,28 +425,37 @@ class UsersDb(object):
             print("Failed to change password")
             return False
 
+    def delete_user(self,username):
+        conn = sqlite3.connect('project_recipes.db')
+        str_delete_user = "Delete from " + self.__tablename + " where " + self.__user_name + "=" + "'" + username + "'"
+        print(str_delete_user)
+        conn.execute(str_delete_user)
+        conn.commit()
+        conn.close()
+        print("User deleted successfully")
+
 class IngredientsDb(object):
-    def __init__(self, tablename="IngredientsDb",ingredient_id="ingredient_id",ingredient_name="ingredient_name",ingredient_amount="ingredient_amount",recipe_id="recipe_id"):
+    def __init__(self, tablename="IngredientsDb",ingredient_id="ingredient_id",ingredient_name="ingredient_name",ingredient_amount="ingredient_amount",recipe_name="recipe_name"):
         self.__tablename=tablename
         self.__ingredient_id=ingredient_id
         self.__ingredient_name=ingredient_name
         self.__ingredient_amount=ingredient_amount
-        self.__recipe_id = recipe_id
+        self.__recipe_name = recipe_name
 
         conn=sqlite3.connect('project_recipes.db')
         str = "Create table if not exists " + self.__tablename + "(" + self.__ingredient_id + " " + "integer primary key autoincrement ,"
         str += " " + self.__ingredient_name + " text not null ,"
         str += " " + self.__ingredient_amount + " text not null ,"
-        str += " " + self.__recipe_id + " integer not null )"
+        str += " " + self.__recipe_name + " text not null )"
         conn.execute(str)
         # print("Table created successfully")
         conn.commit()
         conn.close()
 
-    def insert_ingredient(self, ingredient_name, ingredient_amount, recipe_id):
+    def insert_ingredient(self, ingredient_name, ingredient_amount, recipe_name):
         try:
             conn = sqlite3.connect('project_recipes.db')
-            str_insert = "Insert into " + self.__tablename + " (" + self.__ingredient_name + "," + self.__ingredient_amount + ","+ self.__recipe_id + ") values (" + "'" + ingredient_name + "'" + "," + "'" + ingredient_amount + "'" + "," + "'" + str(recipe_id) +"');"
+            str_insert = "Insert into " + self.__tablename + " (" + self.__ingredient_name + "," + self.__ingredient_amount + ","+ self.__recipe_name + ") values (" + "'" + ingredient_name + "'" + "," + "'" + ingredient_amount + "'" + "," + "'" + recipe_name +"');"
             print(str_insert)
             conn.execute(str_insert)
             conn.commit()
@@ -408,33 +466,32 @@ class IngredientsDb(object):
             print("Failed to insert category")
             return False
 
-    def get_one_ingredient(self, ingredient_id):
-        info = ""
-        try:
-            conn = sqlite3.connect('project_recipes.db')
-            str_get_one_ingredient = "Select * from " + self.__tablename + " where " + self.__ingredient_id + "=" + "'" + str(
-                ingredient_id) + "'"
-            cursor = conn.execute(str_get_one_ingredient)
-            rows = cursor.fetchall()
-            print(len(rows))
-            for row in rows:
-                info = "Ingredient id: " + str(row[0]) + "  Ingredient Name: " + row[1] + "  Ingredient Amount: " + str(
-                    row[2]) + "Recipe id: " + str(row[3])
-                print(row[0], row[1], row[2],row[3])
-            conn.close()
-            if len(rows) == 0:
-                info = "Not found"
-            return info
-        except:
-            return "Trouble on db"
+    # def get_one_ingredient(self, ingredient_id):
+    #     info = ""
+    #     try:
+    #         conn = sqlite3.connect('project_recipes.db')
+    #         str_get_one_ingredient = "Select * from " + self.__tablename + " where " + self.__ingredient_id + "=" + "'" + str(
+    #             ingredient_id) + "'"
+    #         cursor = conn.execute(str_get_one_ingredient)
+    #         rows = cursor.fetchall()
+    #         print(len(rows))
+    #         for row in rows:
+    #             info = "Ingredient id: " + str(row[0]) + "  Ingredient Name: " + row[1] + "  Ingredient Amount: " + str(
+    #                 row[2]) + "Recipe name: " + row[3]
+    #             print(row[0], row[1], row[2],row[3])
+    #         conn.close()
+    #         if len(rows) == 0:
+    #             info = "Not found"
+    #         return info
+    #     except:
+    #         return "Trouble on db"
 
-    def get_ingredients_by_recipe_id(self,recipe_id):
+    def get_ingredients_by_recipe_name(self,recipe_name):
         info = ""
         arr=[]
         try:
             conn = sqlite3.connect('project_recipes.db')
-            str_get_ingredients_same_recipe = "Select * from " + self.__tablename + " where " + self.__recipe_id + "=" + "'" + str(
-                recipe_id) + "'"
+            str_get_ingredients_same_recipe = "Select * from " + self.__tablename + " where " + self.__recipe_name + "=" + "'" + recipe_name + "'"
             cursor = conn.execute(str_get_ingredients_same_recipe)
             rows = cursor.fetchall()
             # print(len(rows))
@@ -442,7 +499,7 @@ class IngredientsDb(object):
                 info += row[1] + "(" + str(row[2]) + ")" + "\n"
                 # print(row[1], row[2])
                 arr=info.split("\n")
-            print(arr)
+            # print(arr)
             conn.close()
             if len(rows) == 0:
                 arr[0] = "No ingredients"
@@ -465,27 +522,27 @@ class IngredientsDb(object):
         print("Success")
         conn.close()
 
-    def get_one_ingredient2(self):
-        conn = sqlite3.connect('project_recipes.db')
-        str = ("""
-                SELECT ingredient_id, ingredient_name, ingredient_amount, RecipesDb.recipe_name 
-                FROM RecipesDb
-                INNER JOIN IngredientsDb ON IngredientsDb.recipe_id = RecipesDb.recipe_id
-                """)
-        cursor = conn.execute(str)
-        for row in cursor:
-            print("ingredient_id =", row[0])
-            print("ingredient_name =", row[1])
-            print("ingredient_amount =", row[2])
-            print("recipe_name =", row[3])
-        conn.commit()
-        conn.close()
+    # def get_one_ingredient2(self):
+    #     conn = sqlite3.connect('project_recipes.db')
+    #     str = ("""
+    #             SELECT ingredient_id, ingredient_name, ingredient_amount, RecipesDb.recipe_name
+    #             FROM RecipesDb
+    #             INNER JOIN IngredientsDb ON IngredientsDb.recipe_id = RecipesDb.recipe_id
+    #             """)
+    #     cursor = conn.execute(str)
+    #     for row in cursor:
+    #         print("ingredient_id =", row[0])
+    #         print("ingredient_name =", row[1])
+    #         print("ingredient_amount =", row[2])
+    #         print("recipe_name =", row[3])
+    #     conn.commit()
+    #     conn.close()
 
     def check_ingredient(self,ingredient_id):
         conn1 = sqlite3.connect('project_recipes.db')
         str_if_exist = "Select * from " + self.__tablename + " where " + self.__ingredient_id + " = " + "'" + str(
             ingredient_id) + "'"
-        print(str_if_exist)
+        # print(str_if_exist)
         cursor = conn1.execute(str_if_exist)
         row = cursor.fetchall()
         if row:
@@ -497,7 +554,7 @@ class IngredientsDb(object):
 
     def delete_ingredient(self,ingredient_id):
         conn = sqlite3.connect('project_recipes.db')
-        str_delete_ingredient = "Delete from " + self.__tablename + "where " + self.__ingredient_id + "=" + "'" + str(
+        str_delete_ingredient = "Delete from " + self.__tablename + " where " + self.__ingredient_id + "=" + "'" + str(
             ingredient_id) + "'"
         print(str_delete_ingredient)
         conn.execute(str_delete_ingredient)
@@ -506,23 +563,23 @@ class IngredientsDb(object):
         print("Ingredient deleted successfully")
 
 
-def JoinRecipesTblToCategoryTbl():
-    conn = sqlite3.connect('project_recipes.db')
-    str= ("""
-            SELECT recipe_id, recipe_name, CategoryDb.category_name, nutritions, cooking_time,description 
-            FROM CategoryDb
-            INNER JOIN RecipesDb ON RecipesDb.category_id = CategoryDb.category_id
-            """)
-    cursor = conn.execute(str)
-    for row in cursor:
-        print("recipe_id =", row[0])
-        print("recipe_name =", row[1])
-        print("category_name =", row[2])
-        print("nutritions =", row[3])
-        print("cooking_time =", row[4])
-        print("description =", row[5])
-    conn.commit()
-    conn.close()
+# def JoinRecipesTblToCategoryTbl():
+#     conn = sqlite3.connect('project_recipes.db')
+#     str= ("""
+#             SELECT recipe_id, recipe_name, CategoryDb.category_name, nutritions, cooking_time,description
+#             FROM CategoryDb
+#             INNER JOIN RecipesDb ON RecipesDb.category_id = CategoryDb.category_id
+#             """)
+#     cursor = conn.execute(str)
+#     for row in cursor:
+#         print("recipe_id =", row[0])
+#         print("recipe_name =", row[1])
+#         print("category_name =", row[2])
+#         print("nutritions =", row[3])
+#         print("cooking_time =", row[4])
+#         print("description =", row[5])
+#     conn.commit()
+#     conn.close()
 
 class HistoryRecipesDb(object):
     def __init__(self, tablename="HistoryRecipesDb",recipe_id="recipe_id", recipe_name="recipe_name",recipe_image_path="recipe_image_path", nutritions="nutritions", cooking_time="cooking_time", description="description",username="username"):
@@ -552,7 +609,7 @@ class HistoryRecipesDb(object):
     def insert_recipe(self, recipe_name, recipe_image_path, nutritions, cooking_time, description, username):
         try:
             conn = sqlite3.connect('project_recipes.db')
-            if self.check_recipe(recipe_name)==False:
+            if self.check_recipe(recipe_name,username)==False:
                 str_insert = "Insert into " + self.__tablename + " (" + self.__recipe_name + "," + self.__recipe_image_path + "," + self.__nutritions + "," + self.__cooking_time + "," + self.__description + "," + self.__username + ") values (" + "'" + recipe_name + "'" + "," + "'" + recipe_image_path + "'" + "," + "'" + nutritions + "'" + "," + "'" + cooking_time + "'" + "," + "'" + description+"'" + "," + "'"+username + "');"
                 print(str_insert)
                 conn.execute(str_insert)
@@ -594,7 +651,7 @@ class HistoryRecipesDb(object):
         try:
             conn = sqlite3.connect('project_recipes.db')
             str_get_all_recipes = "Select * from "+ self.__tablename + " where "+ self.__username + "="+ "'"+ username + "'"
-            # print(str_get_all_recipes)
+            print(str_get_all_recipes)
             cursor = conn.execute(str_get_all_recipes)
             rows = cursor.fetchall()
 
@@ -616,6 +673,9 @@ class HistoryRecipesDb(object):
             str_delete_recipe = "DELETE FROM " + self.__tablename + " where "+ self.__username + "="+ "'"+ username + "'"
             print(str_delete_recipe)
             cursor = conn.execute(str_delete_recipe)
+            # Reset the recipe_id sequence
+            # str_reset_sequence = "UPDATE sqlite_sequence SET seq=0 WHERE name='" + self.__tablename + "'"
+            # conn.execute(str_reset_sequence)
             conn.commit()
             conn.close()
             if cursor.rowcount > 0:
@@ -628,18 +688,17 @@ class HistoryRecipesDb(object):
         except:
             return "Trouble on db"
 
-
-    def check_recipe(self, recipe_name):
+    def check_recipe(self, recipe_name, username):
         conn1 = sqlite3.connect('project_recipes.db')
-        str_if_exist = "Select * from " + self.__tablename + " where " + self.__recipe_name + " = " + "'" + recipe_name + "'"
-        print(str_if_exist)
+        str_if_exist = "Select * from " + self.__tablename + " where " + self.__recipe_name + " = " + "'" + recipe_name + "' and " + self.__username + " = " + "'" + username + "'"
+        # print(str_if_exist)
         cursor = conn1.execute(str_if_exist)
         row = cursor.fetchall()
         if row:
-            print("Recipe already exists in table")
+            # print("Recipe already exists in table")
             return True
         else:
-            print("Recipe not exists in table")
+            # print("Recipe not exists in table")
             return False
 
 class FavoritesRecipesDb(object):
@@ -691,7 +750,7 @@ class FavoritesRecipesDb(object):
         arr=[]
         try:
             conn = sqlite3.connect('project_recipes.db')
-            str_get_one_recipe = "Select * from " + self.__tablename + " where " + self.__recipe_name + "=" + "'" + str(recipe_name) + "'"
+            str_get_one_recipe = "Select * from " + self.__tablename + " where " + self.__recipe_name + "=" + "'" + recipe_name + "'"
             cursor = conn.execute(str_get_one_recipe)
             rows = cursor.fetchall()
             print(len(rows))
@@ -750,14 +809,14 @@ class FavoritesRecipesDb(object):
     def check_recipe(self, recipe_name, username):
         conn1 = sqlite3.connect('project_recipes.db')
         str_if_exist = "Select * from " + self.__tablename + " where " + self.__recipe_name + " = " + "'" + recipe_name + "' and "+self.__username + " = "+ "'" + username+ "'"
-        print(str_if_exist)
+        # print(str_if_exist)
         cursor = conn1.execute(str_if_exist)
         row = cursor.fetchall()
         if row:
-            print("Recipe already exists in table")
+            # print("Recipe already exists in table")
             return True
         else:
-            print("Recipe not exists in table")
+            # print("Recipe not exists in table")
             return False
 
 class SendReceiveRecipesDb(object):
@@ -835,7 +894,6 @@ class SendReceiveRecipesDb(object):
             # print(str_get_all_recipes)
             cursor = conn.execute(str_get_all_recipes)
             rows = cursor.fetchall()
-
             for row in rows:
                 info += str(row[0])+"^"+row[1]+"^"+row[2]+"^"+row[3]+"^"+row[4]+"^"+row[5]+"^"+row[6]+"#"
                 arr = info.split("#")
@@ -969,8 +1027,6 @@ class ShoppingListDb(object):
             return "Trouble on db"
 
 
-
-
 R=RecipesDb()
 C=CategoryDb()
 U=UsersDb()
@@ -979,25 +1035,6 @@ H=HistoryRecipesDb()
 F=FavoritesRecipesDb()
 S=ShoppingListDb()
 
-# U.get_all_users("new1")
-# print(F.get_all_recipes("new1"))
-# U.insert_user("new2@gmail.com","new2","567")
-# U.insert_user("new3@gmail.com","new3","789")
-
-# H.insert_recipe("first")
-# H.insert_recipe("second")
-# print(H.get_all_recipes())
-
-# print(H.get_all_recipes("arina24"))
-# H.delete_all_recipes("arina24")
-# H.insert_recipe("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage rolls.jpg',"116 calories","40 minutes","Preheat oven to 350°.Combine first 6 ingredients and 3/4 teaspoon paprika. Add sausage; mix lightly but thoroughly. On a lightly floured surface, roll each pastry sheet into an 11x10-1/2-in. Rectangle. Cut lengthwise into 3 strips. Spread 1/2 cup sausage mixture lengthwise down the center of each strip. Fold over sides, pinching edges to seal. Cut each log into 6 pieces. Place on a rack in a 15x10x1-in. pan, seam side down. Sprinkle with remaining 1/4 teaspoon paprika. Bake until golden brown and sausage is no longer pink, 20-25 minutes.")
-
-# F.check_recipe("Ravioli Lasagna","arina24")
-
-# print(R.get_recipe_names())
-# arr=["Tomatoes(4 large)","Red onion(1 small)"]
-# S.delete_ingredients_by_name_and_username(arr,"arina24")
-# print(S.get_ingredients_by_username("arina24"))
 
 def insert_rcp(arr):
     for name, image, id_c, nutritions,time,instruction in arr:
@@ -1025,15 +1062,22 @@ arr_recipes=[("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage r
             ("Cherry Tarts",'photos/desserts_recipes/Cherry Cream Cheese Tarts.jpg',5,"362 calories","10 minutes","In a small bowl, beat the cream cheese, sugar and extract until smooth. Spoon into shells. Top with pie filling. Refrigerate until serving."),
             ("Chocolate Molten Cakes",'photos/desserts_recipes/Spiced Chocolate Molten Cakes.jpg',5,"560 calories","30 minutes","Preheat oven to 425°. In a microwave, melt butter and chocolate; stir until smooth. Stir in wine and vanilla. In a small bowl, beat the egg, egg yolk and confectioners sugar until thick and lemon-colored. Beat in the flour, ginger and cinnamon until well blended. Gradually beat in butter mixture. Transfer to 2 greased 6-oz. ramekins or custard cups. Place ramekins on a baking sheet. Bake until a thermometer inserted in the center reads 160° and sides of cakes are set, 10-12 minutes. Remove from the oven and let stand for 1 minute. Run a knife around edges of ramekins; invert onto dessert plates. Dust with additional confectioners sugar. Serve immediately."),
             ("Citrus Cider Punch",'photos/drinks_recipes/Citrus Cider Punch.jpg',6,"138 calories","5 minutes","In a large punch bowl, combine cider and lemonade. Add lemon slices and apple rings. If desired, serve with additional lemon slices and apple rings."),
-            ("Cranberry Fizz",'photos/drinks_recipes/Cranberry Fizz.jpg',6,"154 calories","5 minutes + chilling","In a pitcher, combine cranberry, orange and grapefruit juices and sugar. Refrigerate, covered, until chilled. Just before serving, stir in ginger ale. To serve, pour mixture over ice. Garnish with orange slices and cranberries if desired."),
+            ("Cranberry Fizz",'photos/drinks_recipes/Cranberry Fizz.jpg',6,"154 calories","5 minutes","In a pitcher, combine cranberry, orange and grapefruit juices and sugar. Refrigerate, covered, until chilled. Just before serving, stir in ginger ale. To serve, pour mixture over ice. Garnish with orange slices and cranberries if desired."),
             ("Pineapple Iced Tea",'photos/drinks_recipes/Pineapple Iced Tea.jpg',6,"51 calories","15 minutes","In a large saucepan, bring water to a boil; remove from heat. Add tea bags; steep, covered, 3-5 minutes according to taste. Discard tea bags. Stir in sugar until dissolved. Transfer to a pitcher; cool slightly. Stir in fruit juices. Refrigerate, covered, overnight. Serve over ice. Garnish as desired.")]
 
 def insert_ctg(arr):
-    for name,num_of_recipes in arr:
-        C.insert_category(name,num_of_recipes)
+    for name,num_of_recipes,category_image in arr:
+        C.insert_category(name,num_of_recipes,category_image)
 
-arr_categories=[("Appetizers",4),("Soups",4),("Main Dishes",5),("Salads",5),("Deserts",3),("Drinks",3)]
+arr_categories=[("Appetizers",4,'photos/appetizers_recipes/appetizers.jpg'),
+                ("Soups",4,'photos/soups_recipes/soups.png'),
+                ("Main Dishes",5,'photos/main_dishes_recipes/main meals.jpeg'),
+                ("Salads",5,'photos/salads_recipes/salads.jpg'),
+                ("Deserts",3,'photos/desserts_recipes/deserts.jpg'),
+                ("Drinks",3,'photos/drinks_recipes/drinks.png')]
 #___________________________________________________________
+
+
 
 def insert_ing(arr):
     for ingredient,amount,id_i in arr:
@@ -1064,11 +1108,25 @@ arr_ingredients=[("Onion","1 medium",1),("Minced fresh chives","2 tablespoons",1
                  ("Cranberry juice","1 bottle",23),("Orange juice","1 cup",23),("Ruby red grapefruit juice","1 cup",23),("Sugar","1/2 cup",23),("Ginger ale","2 cups",23),
                  ("Water","4 cups",24),("Tea bags","7 pieces",24),("Sugar","2 tablespoons",24),("Unsweetened pineapple juice","1 cup",24),("Lemon juice","1/3 cup",24)]
 
+# recipes = {}
+#
+# for index, recipe in enumerate(arr_recipes):
+#     name = recipe[0]
+#     recipes[index+1] = name
+# # print(recipes)
+#
+# # Loop through array and replace numbers with recipe names
+# for i in range(len(arr_ingredients)):
+#     recipe_num = arr_ingredients[i][2]
+#     recipe_name = recipes[recipe_num]
+#     arr_ingredients[i] = (arr_ingredients[i][0], arr_ingredients[i][1], recipe_name)
+
 
 # insert_rcp(arr_recipes)
 # insert_ing(arr_ingredients)
 # insert_ctg(arr_categories)
-# ______________________________
+#_______________________________________________________________________________________________________
+
 # R.get_one_recipe2()
 # I.get_one_ingredient2()
 # print("_____________________________")
@@ -1079,3 +1137,28 @@ arr_ingredients=[("Onion","1 medium",1),("Minced fresh chives","2 tablespoons",1
 # U.get_email_by_name("arina24")
 
 # U.get_one_user("arina24")
+
+
+# U.check_user("arina","1234")
+
+# print(I.get_ingredients_by_recipe_name("Chocolate Molten Cakes"))
+
+# U.get_all_users("new1")
+# print(F.get_all_recipes("new1"))
+# U.insert_user("new2@gmail.com","new2","567")
+# U.insert_user("new3@gmail.com","new3","789")
+
+# H.insert_recipe("first")
+# H.insert_recipe("second")
+# print(H.get_all_recipes())
+
+# print(H.get_all_recipes("arina24"))
+# H.delete_all_recipes("arina24")
+
+# F.check_recipe("Ravioli Lasagna","arina24")
+
+# print(R.get_recipe_names())
+# arr=["Tomatoes(4 large)","Red onion(1 small)"]
+# S.delete_ingredients_by_name_and_username(arr,"arina24")
+# print(S.get_ingredients_by_username("arina24"))
+# print(R.get_name_and_image_by_ctg_id(1))

@@ -13,7 +13,7 @@ class StartScreen(tkinter.Tk):
         self.UserDb=UsersDb()
         super().__init__()
         self.running=True
-        self.geometry("600x770")
+        self.geometry("600x770+20+20")
         self.title('Start Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         #self.configure(bg="#BCEAD5")
@@ -65,7 +65,7 @@ class LoginScreen(tkinter.Toplevel):
         super().__init__(parent)
         self.parent=parent
 
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('LogIn Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False, False)
@@ -100,24 +100,28 @@ class LoginScreen(tkinter.Toplevel):
         # ________________________________________________________________________________________________________
         self.str = StringVar()
         self.str.set("")
-        Label(self, textvariable=self.str,foreground="red",font=("Calibri", 15)).place(x=240, y=410)
+        self.lbl_answer = self.canvas.create_text(290, 410, text=self.str.get(), fill="red", font=("Calibri", 15))
 
     def login_user(self):
-        if len(self.entryUsernameLogin.get())==0 and len(self.entryPasswordLogin.get())==0:
+        if len(self.entryUsernameLogin.get())==0 or len(self.entryPasswordLogin.get())==0:
             messagebox.showerror("Error", "Please write your username and password")
             return
         arr=["login",self.entryUsernameLogin.get(),self.entryPasswordLogin.get()]
         str_check = "*".join(arr)
-        print(str_check)
+        # print(str_check)
         self.parent.client_socket.send(str_check.encode())
         data = self.parent.client_socket.recv(1024).decode()
         print(data)
-        if data=="Loged In successfully":
+        if data == "Loged In successfully":
             self.open_main_screen()
-        else:
+        elif data == "Wrong password":
+            message = "Wrong password"
+            self.str.set(message)
+            self.canvas.itemconfig(self.lbl_answer, text=self.str.get())  # update canvas text object
+        elif data == "Login failed":
             message = "Please Sign Up"
             self.str.set(message)
-            print(self.str.get())
+            self.canvas.itemconfig(self.lbl_answer, text=self.str.get())
 
     def open_main_screen(self):
         window = MainScreen(self,self.entryUsernameLogin.get())

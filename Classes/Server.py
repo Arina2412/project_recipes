@@ -56,11 +56,13 @@ class Server(object):
                         print(arr)
                         server_data=self.UserDb.insert_user(arr[1],arr[2],arr[3])
                         print("Server data: ",server_data)
-                        if server_data:
+                        if server_data==True:
                             print(server_data)
                             client_socket.send("Signed up successfully".encode())
-                        elif server_data:
+                        elif server_data==False:
                             client_socket.send("Sign up failed".encode())
+                        elif server_data=="Exists":
+                            client_socket.send("Already exists".encode())
                     #_____________________________________________
                     elif arr!=None and arr[0]=="login" and len(arr)==3:
                         print("Login user")
@@ -71,8 +73,18 @@ class Server(object):
                             print(server_data)
                             client_socket.send("Loged In successfully".encode())
                         elif server_data==False:
-                            client_socket.send("Log In failed".encode())
-                     # _____________________________________________
+                            client_socket.send("Wrong password".encode())
+                        elif server_data=="Fail":
+                            client_socket.send("Login failed".encode())
+                    # _____________________________________________
+                    elif arr!=None and arr[0]=="get_category_image" and len(arr)==2:
+                        server_data=self.CategoryDb.get_image_path(arr[1])
+                        arr_to_send = server_data.encode("utf-8")
+                        if server_data:
+                            client_socket.send(arr_to_send)
+                        elif server_data=="Category is not found in the table":
+                            client_socket.send("Search for num of recipes failed".encode())
+                    # _____________________________________________
                     elif arr!=None and arr[0]=="get_num_of_recipes" and len(arr)==2:
                         server_data=self.CategoryDb.get_num_of_recipes(arr[1])
                         # print("Server data: ", server_data)
@@ -103,9 +115,19 @@ class Server(object):
                             client_socket.send(arr_to_send)
                         elif server_data:
                             client_socket.send("Search for recipe failed".encode())
+
+                    #______________________________________________
+                    elif arr!=None and arr[0]=="get_recipe_name_and_image" and len(arr)==2:
+                        server_data=self.RecipesDb.get_name_and_image_by_ctg_id(arr[1])
+                        print("Server data: ", server_data)
+                        if server_data:
+                            arr_to_send = "#".join(server_data)
+                            arr_to_send = arr_to_send.encode("utf-8")
+                            print(arr_to_send)
+                            client_socket.send(arr_to_send)
                     # _____________________________________________
                     elif arr!=None and arr[0]=="get_ingredients" and len(arr)==2:
-                        server_data=self.IngredientsDb.get_ingredients_by_recipe_id(arr[1])
+                        server_data=self.IngredientsDb.get_ingredients_by_recipe_name(arr[1])
                         print("Server data: ", server_data)
                         arr_to_send = "*".join(server_data)
                         arr_to_send = arr_to_send.encode("utf-8")
@@ -144,7 +166,7 @@ class Server(object):
                         elif server_data==False:
                             client_socket.send("Changing password failed".encode())
                     # _____________________________________________
-                    elif arr!=None and arr[0] == "insert_recipe" and len(arr)==7:
+                    elif arr!=None and arr[0] == "insert_recipe_history" and len(arr)==7:
                         print(arr)
                         server_data=self.HistoryRecipesDb.insert_recipe(arr[1],arr[2],arr[3],arr[4],arr[5],arr[6])
                         print("Server data: ", server_data)

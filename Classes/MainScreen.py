@@ -14,7 +14,7 @@ class MainScreen(tkinter.Toplevel):
 
         self.parent=parent
         # print(self.parent.parent.client_socket)
-        self.geometry('600x770')
+        self.geometry("600x770+20+20")
         self.title('Main Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
@@ -23,55 +23,48 @@ class MainScreen(tkinter.Toplevel):
         self.create_gui()
 
     def create_gui(self):
-        self.head_frame=Frame(self,bg="#658864",highlightbackground="white",highlightthickness=1)
-        self.head_frame.pack(side=TOP,fill=X)
+        self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
+        self.head_frame.pack(side=TOP, fill=X)
         self.head_frame.pack_propagate(False)
         self.head_frame.configure(height=70)
-        #______________________________________________________________________________
-        self.entry_search=Entry(self.head_frame,width=80)
-        self.entry_search.place(x=60,y=45)
+
+        self.entry_search = Entry(self.head_frame, width=80)
+        self.entry_search.place(x=60, y=45)
         self.entry_search.insert(0, "Search recipe...")
         self.entry_search.config(fg="grey")
-        #______________________________________
-        self.recipes_box = Listbox(self,width=80)
-        recipes_names=self.get_all_recipes_names(self.parent.parent.client_socket)
+
+        self.recipes_box = Listbox(self, width=80)
+        recipes_names = self.get_all_recipes_names(self.parent.parent.client_socket)
+
         def search():
-            # clears previous search results
             self.recipes_box.delete(0, END)
-            # puts listbox as a first layer in the window
             self.recipes_box.lift()
-            # gets the search term from the Entry widget
             search_term = self.entry_search.get().lower()
-            # searchs for items that contain the search term
             matching_items = [item for item in recipes_names if search_term in item.lower()]
-            # displays the matching items in the Listbox widget
             for item in matching_items:
                 self.recipes_box.insert(END, item)
             if matching_items:
-                self.recipes_box.place(x=self.entry_search.winfo_x(), y=self.entry_search.winfo_y() + self.entry_search.winfo_height())
+                self.recipes_box.place(x=self.entry_search.winfo_x(),
+                                       y=self.entry_search.winfo_y() + self.entry_search.winfo_height())
             else:
                 self.recipes_box.place_forget()
 
-        def print_selected_item(event):
-            # Get the index of the selected item
-            index = self.recipes_box.curselection()
-            # Get the selected item from the dataset using the index
-            self.selected_item = recipes_names[index[0]]
-            # Print the selected item to the console
-            self.get_recipe(self.selected_item,self.parent.parent.client_socket,self.username)
+        def open_recipe_window():
+            selected_item = self.recipes_box.get(ACTIVE)
+            if selected_item:
+                self.selected_item = selected_item
+                print(self.selected_item)
+                self.get_recipe(self.selected_item, self.parent.parent.client_socket, self.username)
+            self.recipes_box.place_forget()
 
-        # ______________________________________
-        # binds the Entry widget to the "KeyRelease" event, so that the search function is called every time the user types a letter
         self.entry_search.bind("<KeyRelease>", lambda event: search())
 
-        # ______________________________________
         self.img_search = Image.open('photos/other/loupe2.png')
         self.resized = self.img_search.resize((20, 18), Image.LANCZOS)
         self.image_loupe = ImageTk.PhotoImage(self.resized)
-        self.btn_loupe = Button(self.head_frame, image=self.image_loupe, bd=0,bg="#658864",fg="white",
-                               activebackground="#658864",activeforeground="white",command=self.recipes_box.bind("<<ListboxSelect>>", print_selected_item))
+        self.btn_loupe = Button(self.head_frame, image=self.image_loupe, bd=0, bg="#658864", fg="white",
+                                activebackground="#658864", activeforeground="white", command=open_recipe_window)
         self.btn_loupe.place(x=550, y=47)
-
         #_______________________________________________________________________________
         self.toogle_btn=Button(self.head_frame,text="☰",bg="#658864",fg="white",
                                font=('Bold',17),bd=0,activebackground="#658864",activeforeground="white",
@@ -80,42 +73,42 @@ class MainScreen(tkinter.Toplevel):
         self.title_lb=Label(self.head_frame,text="Tasty Pages",bg="#658864",fg="white",font=('Calibri',20))
         self.title_lb.place(x=220,y=7)
         #_______________________________________________________________________________
-        self.img_appetizers=Image.open('photos/appetizers_recipes/appetizers.jpg')
+        self.img_appetizers=Image.open(self.get_category_image("Appetizers"))
         self.resized= self.img_appetizers.resize((150,150),Image.LANCZOS)
         self.image=ImageTk.PhotoImage(self.resized)
         self.btn_appetizers = Button(self,image=self.image,bd=0,command=self.open_appetizers_screen).place(x=100,y=150)
         self.lbl_appetizers=Label(self,text="Appetizers\nNumber of recipes: "+self.get_num_of_recipes("Appetizers"),bg="white",fg="#3C6255",
                                   width=21,font=('Calibri',10)).place(x=100,y=280)
         #_______________________________________________________________________________
-        self.img_soups = Image.open('photos/soups_recipes/soups.png')
+        self.img_soups = Image.open(self.get_category_image("Soups"))
         self.resized = self.img_soups.resize((150, 150), Image.LANCZOS)
         self.image2 = ImageTk.PhotoImage(self.resized)
         self.btn_soups = Button(self, image=self.image2, bd=0,command=self.open_soups_screen).place(x=330, y=150)
         self.lbl_soups = Label(self, text="Soups\nNumber of recipes: "+self.get_num_of_recipes("Soups"), bg="white", fg="#3C6255",
                                width=21, font=('Calibri', 10)).place(x=330, y=280)
         #_______________________________________________________________________________
-        self.img_main_dishes = Image.open('photos/main_dishes_recipes/main meals.jpeg')
+        self.img_main_dishes = Image.open(self.get_category_image("Main Dishes"))
         self.resized = self.img_main_dishes.resize((150, 150), Image.LANCZOS)
         self.image3 = ImageTk.PhotoImage(self.resized)
         self.btn_mdishes = Button(self, image=self.image3, bd=0,command=self.open_main_dishes_screen).place(x=100, y=340)
         self.lbl_mdishes = Label(self, text="Main dishes\nNumber of recipes: "+self.get_num_of_recipes("Main Dishes"), bg="white", fg="#3C6255",
                                width=21, font=('Calibri', 10)).place(x=100, y=470)
         # _______________________________________________________________________________
-        self.img_salads = Image.open('photos/salads_recipes/salads.jpg')
+        self.img_salads = Image.open(self.get_category_image("Salads"))
         self.resized = self.img_salads.resize((150, 150), Image.LANCZOS)
         self.image4 = ImageTk.PhotoImage(self.resized)
         self.btn_salads = Button(self, image=self.image4, bd=0,command=self.open_salad_screen).place(x=330, y=340)
         self.lbl_salads = Label(self, text="Salads\nNumber of recipes: "+self.get_num_of_recipes("Salads"), bg="white", fg="#3C6255",
                                  width=21, font=('Calibri', 10)).place(x=330, y=470)
         # _______________________________________________________________________________
-        self.img_deserts = Image.open('photos/desserts_recipes/deserts.jpg')
+        self.img_deserts = Image.open(self.get_category_image("Deserts"))
         self.resized = self.img_deserts.resize((150, 150), Image.LANCZOS)
         self.image5 = ImageTk.PhotoImage(self.resized)
         self.btn_deserts = Button(self, image=self.image5, bd=0,command=self.open_desserts_screen).place(x=100, y=530)
         self.lbl_deserts = Label(self, text="Desserts\nNumber of recipes: "+self.get_num_of_recipes("Deserts"), bg="white", fg="#3C6255",
                                 width=21, font=('Calibri', 10)).place(x=100, y=660)
         # _______________________________________________________________________________
-        self.img_drinks = Image.open('photos/drinks_recipes/drinks.png')
+        self.img_drinks = Image.open(self.get_category_image("Drinks"))
         self.resized = self.img_drinks.resize((150, 150), Image.LANCZOS)
         self.image6 = ImageTk.PhotoImage(self.resized)
         self.btn_drinks = Button(self, image=self.image6, bd=0,command=self.open_drinks_screen).place(x=330, y=530)
@@ -167,11 +160,19 @@ class MainScreen(tkinter.Toplevel):
         self.toogle_btn.config(command=collapse_toogle_menu)
         #__________________________________________________________________________
 
+    def get_category_image(self,category_name):
+        arr=["get_category_image",category_name]
+        str_get_num_recipes = "*".join(arr)
+        self.parent.parent.client_socket.send(str_get_num_recipes.encode())
+        data = self.parent.parent.client_socket.recv(1024)
+        data = data.decode("utf-8")
+        arr = data.split("*")
+        return arr[0]
+
     def get_num_of_recipes(self,category_name):
         arr=["get_num_of_recipes",category_name]
-        str_get_email = "*".join(arr)
-        # print(str_get_email)
-        self.parent.parent.client_socket.send(str_get_email.encode())
+        str_get_num_recipes = "*".join(arr)
+        self.parent.parent.client_socket.send(str_get_num_recipes.encode())
         data = self.parent.parent.client_socket.recv(1024)
         data = data.decode("utf-8")
         arr = data.split("*")
@@ -193,7 +194,7 @@ class MainScreen(tkinter.Toplevel):
         arr=["get_history",username]
         str_get_history="*".join(arr)
         client_socket.send(str_get_history.encode())
-        data = client_socket.recv(3000)
+        data = client_socket.recv(6000)
         # print("Received {} bytes".format(len(data)))
         data = data.decode("utf-8")
         # print(data)
@@ -240,6 +241,7 @@ class MainScreen(tkinter.Toplevel):
         return arr_recipes_names
 
     def get_recipe(self, name, client_socket, username):
+        check=2
         arr = ["get_one_recipe", name]
         str_get_recipe = "*".join(arr)
         # print(str_get_recipe)
@@ -247,7 +249,7 @@ class MainScreen(tkinter.Toplevel):
         data = client_socket.recv(1024)
         data = data.decode("utf-8")
         arr = data.split("*")
-        self.open_recipes_screen(name, arr, username)
+        self.open_recipes_screen(name, arr, username,check)
 
     def get_ingredients(self,client_socket):
         arr=["get_ingredients_by_username",self.username]
@@ -315,8 +317,8 @@ class MainScreen(tkinter.Toplevel):
         window.grab_set()
         self.withdraw()
 
-    def open_recipes_screen(self, recipe_name, data_recipe, username):
-        window = RecipesScreen(self, recipe_name, data_recipe, username)
+    def open_recipes_screen(self, recipe_name, data_recipe, username,check):
+        window = RecipesScreen(self, recipe_name, data_recipe, username,check)
         window.grab_set()
         self.withdraw()
 
