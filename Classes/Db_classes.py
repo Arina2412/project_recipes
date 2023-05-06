@@ -349,11 +349,15 @@ class UsersDb(object):
             print(info)
             conn.close()
             if len(rows) == 0:
-                arr[0] = "No users"
+                if len(arr) == 0:
+                    arr.append("No users")
+                else:
+                    arr[0] = "No users"
             if arr and arr[-1] == "":
                 arr.pop()
             return arr
-        except:
+        except sqlite3.Error as e:
+            print("Error while connecting to database:", e)
             return "Trouble in DataBase"
 
     def get_email_by_name(self,username):
@@ -1143,7 +1147,7 @@ arr_ingredients=[("Onion","1 medium",1),("Minced fresh chives","2 tablespoons",1
 
 # print(I.get_ingredients_by_recipe_name("Chocolate Molten Cakes"))
 
-# U.get_all_users("new1")
+# print(U.get_all_users("arina24"))
 # print(F.get_all_recipes("new1"))
 # U.insert_user("new2@gmail.com","new2","567")
 # U.insert_user("new3@gmail.com","new3","789")
@@ -1162,3 +1166,4 @@ arr_ingredients=[("Onion","1 medium",1),("Minced fresh chives","2 tablespoons",1
 # S.delete_ingredients_by_name_and_username(arr,"arina24")
 # print(S.get_ingredients_by_username("arina24"))
 # print(R.get_name_and_image_by_ctg_id(1))
+# U.update_password("arina24","123")

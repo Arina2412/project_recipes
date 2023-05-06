@@ -25,8 +25,13 @@ class RecipesScreen(tkinter.Toplevel):
 
         if check==1:
             self.client_socket=self.parent.parent.parent.parent.client_socket
+            self.send_m=self.parent.parent.parent.parent.send_msg
+            self.recv_m=self.parent.parent.parent.parent.recv_msg
         elif check==2:
             self.client_socket=self.parent.parent.parent.client_socket
+            self.send_m=self.parent.parent.parent.send_msg
+            self.recv_m=self.parent.parent.parent.recv_msg
+
         self.create_gui()
 
     def create_gui(self):
@@ -96,10 +101,9 @@ class RecipesScreen(tkinter.Toplevel):
     def get_ingredients(self, client_socket):
         arr = ["get_ingredients", self.arr_recipe[1]]
         str_get_ingredients = "*".join(arr)
-        client_socket.send(str_get_ingredients.encode())
-        data = client_socket.recv(1024)
-        data = data.decode("utf-8")
-        # print(data)
+        self.send_m(str_get_ingredients, client_socket)
+        data = self.recv_m(client_socket)
+        print(data)
         arr2 = data.split("*")
         return arr2
 
@@ -107,8 +111,8 @@ class RecipesScreen(tkinter.Toplevel):
         arr = ["insert_recipe_favorites", arr[1], arr[2], arr[3], arr[4], arr[5], username]
         str_insert = "*".join(arr)
         # print(str_insert)
-        client_socket.send(str_insert.encode())
-        data = client_socket.recv(1024).decode()
+        self.send_m(str_insert, client_socket)
+        data = self.recv_m(client_socket)
         # print(data)
         if data == "Recipe added to favorites successfully":
             return True
@@ -118,8 +122,8 @@ class RecipesScreen(tkinter.Toplevel):
     def check_recipe(self,client_socket):
         arr=["check_favorite_recipe",self.recipe_name,self.username]
         str_insert = "*".join(arr)
-        client_socket.send(str_insert.encode())
-        data = client_socket.recv(1024).decode()
+        self.send_m(str_insert, client_socket)
+        data = self.recv_m(client_socket)
         # print(data)
         if data == "Recipe already exists in table":
             return True
@@ -129,9 +133,8 @@ class RecipesScreen(tkinter.Toplevel):
     def get_users(self,client_socket):
         arr=["get_all_users",self.username]
         str_get_recipe = "*".join(arr)
-        client_socket.send(str_get_recipe.encode())
-        data = client_socket.recv(1024)
-        data = data.decode("utf-8")
+        self.send_m(str_get_recipe, client_socket)
+        data = self.recv_m(client_socket)
         arr2 = data.split("*")
         print(arr2)
         self.open_choose_screen(arr2)
@@ -140,8 +143,8 @@ class RecipesScreen(tkinter.Toplevel):
         arr = ["insert_ingredient", ingredient_name, username]
         str_insert = "*".join(arr)
         print(str_insert)
-        client_socket.send(str_insert.encode())
-        data = client_socket.recv(1024).decode()
+        self.send_m(str_insert, client_socket)
+        data = self.recv_m(client_socket)
         # print(data)
         if data == "Ingredient added to table successfully":
             return True
@@ -190,8 +193,8 @@ class ChooseScreen(tkinter.Toplevel):
         arr = ["insert_recipe_to_send", arr[1], arr[2], arr[3], arr[4], arr[5],from_username,to_username]
         str_insert = "*".join(arr)
         # print(str_insert)
-        client_socket.send(str_insert.encode())
-        data = client_socket.recv(1024).decode()
+        self.parent.send_m(str_insert,client_socket)
+        data=self.parent.recv_m(client_socket)
         # print(data)
         if data == "Recipe added to table successfully":
             messagebox.showinfo("Success","Recipe send successfully to user: "+to_username)

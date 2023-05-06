@@ -1,3 +1,4 @@
+import os
 from CategoriesScreens import *
 from ProfileScreen import ProfileScreen
 from FavoritesScreen import FavoritesScreen
@@ -160,32 +161,41 @@ class MainScreen(tkinter.Toplevel):
         self.toogle_btn.config(command=collapse_toogle_menu)
         #__________________________________________________________________________
 
-    def get_category_image(self,category_name):
-        arr=["get_category_image",category_name]
-        str_get_num_recipes = "*".join(arr)
-        self.parent.parent.client_socket.send(str_get_num_recipes.encode())
-        data = self.parent.parent.client_socket.recv(1024)
-        data = data.decode("utf-8")
-        arr = data.split("*")
-        return arr[0]
+    def if_exist(self, file_path):
+        return os.path.isfile(file_path)
+
+    def get_category_image(self, category_name):
+        arr = ["get_category_image_path", category_name]
+        str_get_category_image = "*".join(arr)
+        self.parent.parent.send_msg(str_get_category_image, self.parent.parent.client_socket)
+        image_path = self.parent.parent.recv_msg(self.parent.parent.client_socket)
+        # print(image_path)
+        # arr = data.split("*")
+        if not self.if_exist(image_path):
+            arr2 = ["get_category_image_data", category_name]
+            str_get_category_image_data = "*".join(arr2)
+            self.parent.parent.send_msg(str_get_category_image_data, self.parent.parent.client_socket)
+            image_data=self.parent.parent.recv_msg(self.parent.parent.client_socket)
+            with open(image_path, "wb") as f:
+                f.write(image_data)
+                f.close()
+        return image_path
+        # return arr[0]
 
     def get_num_of_recipes(self,category_name):
         arr=["get_num_of_recipes",category_name]
         str_get_num_recipes = "*".join(arr)
-        self.parent.parent.client_socket.send(str_get_num_recipes.encode())
-        data = self.parent.parent.client_socket.recv(1024)
-        data = data.decode("utf-8")
+        self.parent.parent.send_msg(str_get_num_recipes, self.parent.parent.client_socket)
+        data = self.parent.parent.recv_msg(self.parent.parent.client_socket)
         arr = data.split("*")
-        # print(arr)
         return arr[0]
 
     def get_email(self, username, client_socket):
         arr = ["get_email", username]
         str_get_email = "*".join(arr)
         print(str_get_email)
-        client_socket.send(str_get_email.encode())
-        data = client_socket.recv(1024)
-        data = data.decode("utf-8")
+        self.parent.parent.send_msg(str_get_email, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         arr = data.split("*")
         # print(arr)
         self.open_profile_screen(arr)
@@ -193,11 +203,8 @@ class MainScreen(tkinter.Toplevel):
     def get_history(self,client_socket,username):
         arr=["get_history",username]
         str_get_history="*".join(arr)
-        client_socket.send(str_get_history.encode())
-        data = client_socket.recv(6000)
-        # print("Received {} bytes".format(len(data)))
-        data = data.decode("utf-8")
-        # print(data)
+        self.parent.parent.send_msg(str_get_history, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         arr = data.split("#")
         print(arr)
         # print("Recipe: "+arr[0])
@@ -206,11 +213,8 @@ class MainScreen(tkinter.Toplevel):
     def get_favorites(self,client_socket,username):
         arr=["get_favorites",username]
         str_get_favorites="*".join(arr)
-        client_socket.send(str_get_favorites.encode())
-        data = client_socket.recv(4000)
-        # print("Received {} bytes".format(len(data)))
-        data = data.decode("utf-8")
-        # print(data)
+        self.parent.parent.send_msg(str_get_favorites, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         arr = data.split("#")
         print(arr)
         # print("Recipe: "+arr[0])
@@ -219,23 +223,17 @@ class MainScreen(tkinter.Toplevel):
     def get_received_recipes(self,client_socket,username):
         arr=["get_received_recipes",username]
         str_get_received_recipes="*".join(arr)
-        client_socket.send(str_get_received_recipes.encode())
-        data = client_socket.recv(4000)
-        # print("Received {} bytes".format(len(data)))
-        data = data.decode("utf-8")
-        # print(data)
+        self.parent.parent.send_msg(str_get_received_recipes, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         arr2 = data.split("#")
         # print(arr2)
-        # print("Recipe: "+arr[0])
         self.open_received_recipes_screen(arr2)
 
     def get_all_recipes_names(self,client_socket):
         arr=["get_all_recipes_names"]
-        str_get_received_recipes = "*".join(arr)
-        client_socket.send(str_get_received_recipes.encode())
-        data = client_socket.recv(1024)
-        data = data.decode("utf-8")
-        # print(data)
+        str_get_all_recipes_names = "*".join(arr)
+        self.parent.parent.send_msg(str_get_all_recipes_names, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         arr_recipes_names = data.split("*")
         # print(arr_recipes_names)
         return arr_recipes_names
@@ -245,18 +243,16 @@ class MainScreen(tkinter.Toplevel):
         arr = ["get_one_recipe", name]
         str_get_recipe = "*".join(arr)
         # print(str_get_recipe)
-        client_socket.send(str_get_recipe.encode())
-        data = client_socket.recv(1024)
-        data = data.decode("utf-8")
+        self.parent.parent.send_msg(str_get_recipe, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         arr = data.split("*")
         self.open_recipes_screen(name, arr, username,check)
 
     def get_ingredients(self,client_socket):
         arr=["get_ingredients_by_username",self.username]
         str_get_ingredients="*".join(arr)
-        client_socket.send(str_get_ingredients.encode())
-        data = client_socket.recv(1024)
-        data = data.decode("utf-8")
+        self.parent.parent.send_msg(str_get_ingredients, client_socket)
+        data = self.parent.parent.recv_msg(client_socket)
         # print(data)
         arr2 = data.split("#")
         self.open_shopping_list_screen(arr2)

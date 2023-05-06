@@ -94,8 +94,8 @@ class ReceivedRecipesScreen(tkinter.Toplevel):
     def clear_received_recipes(self, username, client_socket):
         arr = ["clear_received_recipes", username]
         str_clear = "*".join(arr)
-        client_socket.send(str_clear.encode())
-        data = client_socket.recv(1024).decode()
+        self.parent.parent.parent.send_msg(str_clear, client_socket)
+        data = self.parent.parent.parent.recv_msg(client_socket)
         print(data)
         if data == "Received recipes cleared successfully":
             messagebox.showinfo("Success", "History of received recipes cleared successfully.\nReset the window")

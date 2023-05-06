@@ -27,9 +27,8 @@ def get_recipe(self,name,client_socket,username):
     arr = ["get_one_recipe", name]
     str_get_recipe = "*".join(arr)
     # print(str_get_recipe)
-    client_socket.send(str_get_recipe.encode())
-    data = client_socket.recv(1024)
-    data=data.decode("utf-8")
+    self.parent.parent.parent.send_msg(str_get_recipe, client_socket)
+    data = self.parent.parent.parent.recv_msg(client_socket)
     arr=data.split("*")
     open_recipes_screen(self,name,arr,username)
     # print("Length: "+str(len(arr)))
@@ -44,8 +43,8 @@ def insert_recipe(self,arr,client_socket,username):
     arr=["insert_recipe_history",arr[1],arr[2],arr[3],arr[4],arr[5],username]
     str_insert = "*".join(arr)
     # print(str_insert)
-    client_socket.send(str_insert.encode())
-    data = client_socket.recv(1024)
+    self.parent.parent.parent.send_msg(str_insert, client_socket)
+    data = self.parent.parent.parent.recv_msg(client_socket)
     print(data)
     if data == "Recipe added to history successfully":
         return True
@@ -55,9 +54,8 @@ def insert_recipe(self,arr,client_socket,username):
 def get_recipe_image(self,category_id,client_socket):
     arr = ["get_recipe_name_and_image", str(category_id)]
     str_get_recipe_name_and_image= "*".join(arr)
-    client_socket.send(str_get_recipe_name_and_image.encode())
-    data = client_socket.recv(1024)
-    data = data.decode("utf-8")
+    self.parent.parent.parent.send_msg(str_get_recipe_name_and_image, client_socket)
+    data = self.parent.parent.parent.recv_msg(client_socket)
     arr = data.split("#")
     print(arr)
     return arr

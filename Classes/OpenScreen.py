@@ -8,11 +8,14 @@ from SignupScreen import SignupScreen
 from tkinter import messagebox
 from MainScreen import MainScreen
 
+SIZE = 10
+
 class StartScreen(tkinter.Tk):
     def __init__(self):
         self.UserDb=UsersDb()
         super().__init__()
         self.running=True
+        self.FORMAT = 'utf-8'
         self.geometry("600x770+20+20")
         self.title('Start Screen')
         self.iconbitmap('photos/other/icon_recipe.ico')
@@ -21,6 +24,7 @@ class StartScreen(tkinter.Tk):
 
         self.handle_thread_socket()
         self.create_gui()
+
     def create_gui(self):
         self.canvas=Canvas(self,width=600,height=770,bd=0,highlightthickness=0)
         self.canvas.pack()
@@ -59,6 +63,40 @@ class StartScreen(tkinter.Tk):
         print("data: "+data)
         print("hi", self.client_socket)
 
+    def send_msg(self, data, client_socket):
+        try:
+            print("Message: " + str(data))
+            if type(data) != bytes:
+                data = data.encode()
+            length = str(len(data)).zfill(SIZE)
+            length = length.encode(self.FORMAT)
+            message = length + data
+            print("Message with length: " + str(message))
+            client_socket.send(message)
+        except:
+            print("Error with message sending from client")
+
+    def recv_msg(self, client_socket, m_type="string"):
+        try:
+            length = client_socket.recv(SIZE).decode(self.FORMAT)
+            if not length:
+                print("No length")
+                return None
+            print("Length: " + length)
+            data = client_socket.recv(int(length))
+            if not data:
+                print("No data")
+                return None
+            print("Data: " + str(data))
+            if m_type == "string":
+                data = data.decode(self.FORMAT)
+            print("Data is:" + data)
+            # if m_type == "bytes":
+            #     print("Data is bytes")
+            return data
+        except Exception as e:
+            print("Error with message receiving:", str(e))
+            return None
 
 class LoginScreen(tkinter.Toplevel):
     def __init__(self,parent):
@@ -100,7 +138,7 @@ class LoginScreen(tkinter.Toplevel):
         # ________________________________________________________________________________________________________
         self.str = StringVar()
         self.str.set("")
-        self.lbl_answer = self.canvas.create_text(290, 410, text=self.str.get(), fill="red", font=("Calibri", 15))
+        self.lbl_answer = self.canvas.create_text(300, 430, text=self.str.get(), fill="red", font=("Calibri", 15))
 
     def login_user(self):
         if len(self.entryUsernameLogin.get())==0 or len(self.entryPasswordLogin.get())==0:
@@ -108,9 +146,9 @@ class LoginScreen(tkinter.Toplevel):
             return
         arr=["login",self.entryUsernameLogin.get(),self.entryPasswordLogin.get()]
         str_check = "*".join(arr)
-        # print(str_check)
-        self.parent.client_socket.send(str_check.encode())
-        data = self.parent.client_socket.recv(1024).decode()
+        print(str_check)
+        self.parent.send_msg(str_check,self.parent.client_socket)
+        data=self.parent.recv_msg(self.parent.client_socket)
         print(data)
         if data == "Loged In successfully":
             self.open_main_screen()

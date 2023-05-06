@@ -97,8 +97,8 @@ class ShoppingListScreen(tkinter.Toplevel):
         arr = ["clear_shopping_list", str(arr_to_delete), username]
         print(arr)
         str_clear = "*".join(arr)
-        client_socket.send(str_clear.encode())
-        data = client_socket.recv(1024).decode()
+        self.parent.parent.parent.send_msg(str_clear, client_socket)
+        data = self.parent.parent.parent.recv_msg(client_socket)
         print(data)
         if data == "Shopping list cleared successfully":
             messagebox.showinfo("Success", "Chosen products cleared successfully.\nReset the window")
@@ -109,8 +109,8 @@ class ShoppingListScreen(tkinter.Toplevel):
         arr = ["insert_ingredient", ingredient, username]
         str_insert = "*".join(arr)
         print(str_insert)
-        client_socket.send(str_insert.encode())
-        data = client_socket.recv(1024).decode()
+        self.parent.parent.parent.send_msg(str_insert, client_socket)
+        data = self.parent.parent.parent.recv_msg(client_socket)
         if data == "Ingredient added to table successfully":
             messagebox.showinfo("Success","Product added to list successfully.\nReset the window")
         elif data=="Already exists":

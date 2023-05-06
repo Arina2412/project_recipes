@@ -64,8 +64,8 @@ class SignupScreen(tkinter.Toplevel):
         arr = ["signup", self.entryEmailSignup1.get(), self.entryUsernameSignup1.get(), self.entryPasswordSignup1.get()]
         str_insert = "*".join(arr)
         print(str_insert)
-        self.parent.client_socket.send(str_insert.encode())
-        data = self.parent.client_socket.recv(1024).decode()
+        self.parent.send_msg(str_insert,self.parent.client_socket)
+        data=self.parent.recv_msg(self.parent.client_socket)
         print(data)
         if data == "Signed up successfully":
             self.open_main_screen()

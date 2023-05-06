@@ -101,8 +101,8 @@ class HistoryScreen(tkinter.Toplevel):
     def clear_history(self,username,client_socket):
         arr=["clear_history",username]
         str_clear = "*".join(arr)
-        client_socket.send(str_clear.encode())
-        data = client_socket.recv(1024).decode()
+        self.parent.parent.parent.send_msg(str_clear, client_socket)
+        data = self.parent.parent.parent.recv_msg(client_socket)
         print(data)
         if data=="History cleared successfully":
             messagebox.showinfo("Success", "History cleared successfully.\nReset the window")

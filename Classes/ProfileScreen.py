@@ -79,8 +79,8 @@ class ProfileScreen(tkinter.Toplevel):
         arr = ["change_email", self.username, self.en_email.get()]
         str_change = "*".join(arr)
         print(str_change)
-        self.parent.parent.parent.client_socket.send(str_change.encode())
-        data = self.parent.parent.parent.client_socket.recv(1024).decode()
+        self.parent.parent.parent.send_msg(str_change, self.parent.parent.parent.client_socket)
+        data = self.parent.parent.parent.recv_msg(self.parent.parent.parent.client_socket)
         print(data)
         if data == "Email changed successfully":
             messagebox.showinfo("Success", "Email changed successfully.\nReset the window")
@@ -91,8 +91,8 @@ class ProfileScreen(tkinter.Toplevel):
         arr = ["change_password", self.username, self.en_password.get()]
         str_change = "*".join(arr)
         print(str_change)
-        self.parent.parent.parent.client_socket.send(str_change.encode())
-        data = self.parent.parent.parent.client_socket.recv(1024).decode()
+        self.parent.parent.parent.send_msg(str_change, self.parent.parent.parent.client_socket)
+        data = self.parent.parent.parent.recv_msg(self.parent.parent.parent.client_socket)
         print(data)
         if data == "Password changed successfully":
             messagebox.showinfo("Success", "Password changed successfully.\nEnter the app again")
