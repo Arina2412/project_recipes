@@ -1,4 +1,3 @@
-import os
 from CategoriesScreens import *
 from ProfileScreen import ProfileScreen
 from FavoritesScreen import FavoritesScreen
@@ -22,6 +21,9 @@ class MainScreen(tkinter.Toplevel):
         self.configure(bg="#B5D5C5")
 
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        # self.protocol("WM_DELETE_WINDOW", lambda: self.logout(self.parent.parent.client_socket))
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -169,18 +171,15 @@ class MainScreen(tkinter.Toplevel):
         str_get_category_image = "*".join(arr)
         self.parent.parent.send_msg(str_get_category_image, self.parent.parent.client_socket)
         image_path = self.parent.parent.recv_msg(self.parent.parent.client_socket)
-        # print(image_path)
-        # arr = data.split("*")
-        if not self.if_exist(image_path):
-            arr2 = ["get_category_image_data", category_name]
-            str_get_category_image_data = "*".join(arr2)
-            self.parent.parent.send_msg(str_get_category_image_data, self.parent.parent.client_socket)
-            image_data=self.parent.parent.recv_msg(self.parent.parent.client_socket)
-            with open(image_path, "wb") as f:
-                f.write(image_data)
-                f.close()
+        # if not self.if_exist(image_path):
+        #     arr2 = ["get_category_image_data", category_name]
+        #     str_get_category_image_data = "*".join(arr2)
+        #     self.parent.parent.send_msg(str_get_category_image_data, self.parent.parent.client_socket)
+        #     image_data=self.parent.parent.recv_msg(self.parent.parent.client_socket)
+        #     with open(image_path, "wb") as f:
+        #         f.write(image_data)
+        #         f.close()
         return image_path
-        # return arr[0]
 
     def get_num_of_recipes(self,category_name):
         arr=["get_num_of_recipes",category_name]
@@ -319,20 +318,30 @@ class MainScreen(tkinter.Toplevel):
         self.withdraw()
 
     def logout(self,client_socket):
-        arr = ["log_out"]
-        str_log_out = "*".join(arr)
-        client_socket.send(str_log_out.encode())
-        data = client_socket.recv(1024).decode()
-        if data == "Server is shutting down":
-            client_socket.close()
-            self.return_back_to_start_screen()
+        # arr = ["log_out"]
+        # str_log_out = "*".join(arr)
+        # client_socket.send(str_log_out.encode())
+        # data = client_socket.recv(1024).decode()
+        # if data == "Server is shutting down":
+        #     client_socket.close()
+        #     self.return_back_to_start_screen()
+        #     self.parent.parent.running = False
+        # else:
+        #     messagebox.showerror("Error","Try again")
+        if messagebox.askokcancel("Log out", "Do you want to log out?"):
+            self.parent.parent.send_msg("log_out", self.parent.parent.client_socket)
             self.parent.parent.running = False
-        else:
-            messagebox.showerror("Error","Try again")
+            self.return_back_to_start_screen()
 
     def return_back_to_start_screen(self):
         self.parent.parent.deiconify()
         self.destroy()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.send_msg("closed", self.parent.parent.client_socket)
+            self.parent.parent.running = False
+            self.destroy()
 
 
 

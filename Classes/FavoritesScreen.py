@@ -28,6 +28,8 @@ class FavoritesScreen(tkinter.Toplevel):
             self.create_gui()
             self.create_recipes()
 
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
         self.head_frame.pack(side=TOP, fill=X)
@@ -111,3 +113,9 @@ class FavoritesScreen(tkinter.Toplevel):
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.end_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()

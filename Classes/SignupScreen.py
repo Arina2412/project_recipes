@@ -17,6 +17,8 @@ class SignupScreen(tkinter.Toplevel):
         self.UserDb=UsersDb()
         self.create_gui()
 
+        # self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def create_gui(self):
         self.canvas = Canvas(self, width=600, height=770, bd=0, highlightthickness=0)
         self.canvas.pack()
@@ -45,11 +47,12 @@ class SignupScreen(tkinter.Toplevel):
         # self.entryPasswordSignup1.insert(0, "Enter your password...")
         # self.entryPasswordSignup1.config(fg="grey")
         # ________________________________________________________________________________________________________
-        self.buttonAddUserSignup = Button(self, text="Sign Up", background="#C27664", foreground="white", font=("Calibri", 17),command=self.signup_user)
+        self.buttonAddUserSignup = Button(self, text="Sign Up", background="#C27664", foreground="white", font=("Calibri", 17),
+                                          activebackground="#C27664", activeforeground="white",command=self.signup_user)
         self.buttonAddUserSignup.place(x=230, y=550, width=140, height=50)
         # ________________________________________________________________________________________________________
         self.buttonReturnToStartScreen2 = Button(self, text='Return Back', background="#C27664", foreground="white",
-                                                 font=("Calibri", 14), command=self.return_back)
+                                                 font=("Calibri", 14),activebackground="#C27664", activeforeground="white", command=self.return_back)
         self.buttonReturnToStartScreen2.place(x=245, y=620)
         # ________________________________________________________________________________________________________
         self.str = StringVar()
@@ -87,6 +90,12 @@ class SignupScreen(tkinter.Toplevel):
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.send_msg("closed", self.parent.client_socket)
+            self.parent.running = False
+            self.destroy()
 
 
 

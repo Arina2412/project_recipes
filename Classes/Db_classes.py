@@ -166,6 +166,13 @@ class RecipesDb(object):
         except:
             return "Trouble in DataBase"
 
+    def get_count_recipes_same_ctg(self,category_id):
+        conn = sqlite3.connect('project_recipes.db')
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM RecipesDb WHERE category_id = ?", (category_id,))
+        count = c.fetchone()[0]
+        conn.close()
+        return count
 
 class CategoryDb(object):
     def __init__(self, tablename="CategoryDb", category_id="category_id",category_name="category_name",number_of_recipes="number_of_recipes", category_image="category_image"):
@@ -464,7 +471,7 @@ class IngredientsDb(object):
             conn.execute(str_insert)
             conn.commit()
             conn.close()
-            #print("Record created successfully")
+            print("Record created successfully")
             return True
         except:
             print("Failed to insert category")
@@ -817,10 +824,10 @@ class FavoritesRecipesDb(object):
         cursor = conn1.execute(str_if_exist)
         row = cursor.fetchall()
         if row:
-            # print("Recipe already exists in table")
+            print("Recipe already exists in table")
             return True
         else:
-            # print("Recipe not exists in table")
+            print("Recipe not exists in table")
             return False
 
 class SendReceiveRecipesDb(object):
@@ -968,11 +975,11 @@ class ShoppingListDb(object):
                 conn.execute(str_insert)
                 conn.commit()
                 conn.close()
+                print("Record created successfully")
+                return True
             else:
                 print("Already exists")
                 return False
-            print("Record created successfully")
-            return True
         except:
             print("Failed to insert category")
             return False
@@ -1003,7 +1010,7 @@ class ShoppingListDb(object):
 
     def check_ingredient(self,ingredient_name,username):
         conn1 = sqlite3.connect('project_recipes.db')
-        str_if_exist = "Select * from " + self.__tablename + " where " + self.__ingredient_name + " = " + "'" + ingredient_name+ "' and "+self.__ingredient_name+" = "+"'"+username+"'"
+        str_if_exist = "SELECT * FROM " + self.__tablename + " WHERE " + self.__ingredient_name + " = '" + ingredient_name + "' AND " + self.__username + " = '" + username + "'"
         print(str_if_exist)
         cursor = conn1.execute(str_if_exist)
         row = cursor.fetchall()
@@ -1041,8 +1048,8 @@ S=ShoppingListDb()
 
 
 def insert_rcp(arr):
-    for name, image, id_c, nutritions,time,instruction in arr:
-        R.insert_recipe(name,image,id_c,nutritions,time,instruction)
+    for name, image, id_c, nutritions, time, instruction in arr:
+        R.insert_recipe(name, image, id_c, nutritions, time, instruction)
 
 arr_recipes=[("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage rolls.jpg',1,"116 calories","40 minutes","Preheat oven to 350°.Combine first 6 ingredients and 3/4 teaspoon paprika. Add sausage; mix lightly but thoroughly. On a lightly floured surface, roll each pastry sheet into an 11x10-1/2-in. Rectangle. Cut lengthwise into 3 strips. Spread 1/2 cup sausage mixture lengthwise down the center of each strip. Fold over sides, pinching edges to seal. Cut each log into 6 pieces. Place on a rack in a 15x10x1-in. pan, seam side down. Sprinkle with remaining 1/4 teaspoon paprika. Bake until golden brown and sausage is no longer pink, 20-25 minutes."),
             ("Chicken & Bacon Roll Ups",'photos/appetizers_recipes/chicken&bacon roll ups.jpg',1,"43 calories","20 minutes","Mix chicken, cream cheese, 1/2 cup salsa and bacon; spread over tortillas. Roll up tightly; wrap. Refrigerate at least 1 hour. Just before serving, unwrap and cut tortillas into 1-in. slices. Serve with remaining salsa."),
@@ -1069,19 +1076,21 @@ arr_recipes=[("Aussie Sausage Rolls",'photos/appetizers_recipes/aussie sausage r
             ("Cranberry Fizz",'photos/drinks_recipes/Cranberry Fizz.jpg',6,"154 calories","5 minutes","In a pitcher, combine cranberry, orange and grapefruit juices and sugar. Refrigerate, covered, until chilled. Just before serving, stir in ginger ale. To serve, pour mixture over ice. Garnish with orange slices and cranberries if desired."),
             ("Pineapple Iced Tea",'photos/drinks_recipes/Pineapple Iced Tea.jpg',6,"51 calories","15 minutes","In a large saucepan, bring water to a boil; remove from heat. Add tea bags; steep, covered, 3-5 minutes according to taste. Discard tea bags. Stir in sugar until dissolved. Transfer to a pitcher; cool slightly. Stir in fruit juices. Refrigerate, covered, overnight. Serve over ice. Garnish as desired.")]
 
+
 def insert_ctg(arr):
-    for name,num_of_recipes,category_image in arr:
-        C.insert_category(name,num_of_recipes,category_image)
+    id = 1
+    for name, category_image in arr:
+        num_of_recipes = R.get_count_recipes_same_ctg(id)
+        C.insert_category(name, num_of_recipes, category_image)
+        id += 1
 
-arr_categories=[("Appetizers",4,'photos/appetizers_recipes/appetizers.jpg'),
-                ("Soups",4,'photos/soups_recipes/soups.png'),
-                ("Main Dishes",5,'photos/main_dishes_recipes/main meals.jpeg'),
-                ("Salads",5,'photos/salads_recipes/salads.jpg'),
-                ("Deserts",3,'photos/desserts_recipes/deserts.jpg'),
-                ("Drinks",3,'photos/drinks_recipes/drinks.png')]
+arr_categories=[("Appetizers",'photos/appetizers_recipes/appetizers.jpg'),
+                ("Soups",'photos/soups_recipes/soups.png'),
+                ("Main Dishes",'photos/main_dishes_recipes/main meals.jpeg'),
+                ("Salads",'photos/salads_recipes/salads.jpg'),
+                ("Deserts",'photos/desserts_recipes/deserts.jpg'),
+                ("Drinks",'photos/drinks_recipes/drinks.png')]
 #___________________________________________________________
-
-
 
 def insert_ing(arr):
     for ingredient,amount,id_i in arr:
@@ -1112,24 +1121,25 @@ arr_ingredients=[("Onion","1 medium",1),("Minced fresh chives","2 tablespoons",1
                  ("Cranberry juice","1 bottle",23),("Orange juice","1 cup",23),("Ruby red grapefruit juice","1 cup",23),("Sugar","1/2 cup",23),("Ginger ale","2 cups",23),
                  ("Water","4 cups",24),("Tea bags","7 pieces",24),("Sugar","2 tablespoons",24),("Unsweetened pineapple juice","1 cup",24),("Lemon juice","1/3 cup",24)]
 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # recipes = {}
+# #
+# # for index, recipe in enumerate(arr_recipes):
+# #     name = recipe[0]
+# #     recipes[index+1] = name
+# # # print(recipes)
+# #
+# # # Loop through array and replace numbers with recipe names
+# # for i in range(len(arr_ingredients)):
+# #     recipe_num = arr_ingredients[i][2]
+# #     recipe_name = recipes[recipe_num]
+# #     arr_ingredients[i] = (arr_ingredients[i][0], arr_ingredients[i][1], recipe_name)
 #
-# for index, recipe in enumerate(arr_recipes):
-#     name = recipe[0]
-#     recipes[index+1] = name
-# # print(recipes)
 #
-# # Loop through array and replace numbers with recipe names
-# for i in range(len(arr_ingredients)):
-#     recipe_num = arr_ingredients[i][2]
-#     recipe_name = recipes[recipe_num]
-#     arr_ingredients[i] = (arr_ingredients[i][0], arr_ingredients[i][1], recipe_name)
-
-
 # insert_rcp(arr_recipes)
 # insert_ing(arr_ingredients)
 # insert_ctg(arr_categories)
-#_______________________________________________________________________________________________________
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # R.get_one_recipe2()
 # I.get_one_ingredient2()
@@ -1167,3 +1177,6 @@ arr_ingredients=[("Onion","1 medium",1),("Minced fresh chives","2 tablespoons",1
 # print(S.get_ingredients_by_username("arina24"))
 # print(R.get_name_and_image_by_ctg_id(1))
 # U.update_password("arina24","123")
+# S.check_ingredient("Dried basil(1/2 teaspoon)","arina24")
+# print(S.check_ingredient("Salt(1/2 teaspoon)","arina24"))
+# print(R.get_count_recipes_same_ctg(3))

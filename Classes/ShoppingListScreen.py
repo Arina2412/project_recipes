@@ -33,6 +33,8 @@ class ShoppingListScreen(tkinter.Toplevel):
             self.create_gui()
             self.create_shopping_list()
 
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -76,7 +78,8 @@ class ShoppingListScreen(tkinter.Toplevel):
             self.ingredient_name = self.arr_ingredients[count]
             ingredient_btn = Button(self, text=self.ingredient_name, bd=0, bg="#B5D5C5", activebackground="#B5D5C5",
                                     activeforeground="white", font=("Calibri", 13))
-            ingredient_btn.config(command=lambda current=ingredient_btn,ingredient=self.ingredient_name: (self.change_font(current), self.add_to_overstrike(ingredient)))
+            ingredient_btn.config(
+                command=lambda current=ingredient_btn, ingredient=self.ingredient_name: self.add_to_overstrike(current, ingredient))
             ingredient_btn.place(x=50, y=Y)
             count = count + 1
             Y = Y + 25
@@ -84,14 +87,15 @@ class ShoppingListScreen(tkinter.Toplevel):
     def change_font(self, current):
         current.config(font=("Calibri", 13, 'overstrike'))
 
-    def add_to_overstrike(self,ingredient):
-        print("List: "+ str(self.list))
+    def add_to_overstrike(self, ingredient_btn, ingredient):
         if ingredient not in self.list:
-            print(ingredient)
             self.list.append(ingredient)
-            return True #ingredient is not exist in the list
+            ingredient_btn.config(font=("Calibri", 13, 'overstrike'))
+            return True  # ingredient is not exist in the list
         else:
-            return False #ingredient is exist in the list
+            self.list.remove(ingredient)
+            ingredient_btn.config(font=("Calibri", 13))
+            return False  # ingredient is exist in the list
 
     def clear_shopping_list(self, arr_to_delete, username, client_socket):
         arr = ["clear_shopping_list", str(arr_to_delete), username]
@@ -122,3 +126,9 @@ class ShoppingListScreen(tkinter.Toplevel):
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.end_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()

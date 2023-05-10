@@ -32,15 +32,14 @@ class Server(object):
                 print(' Waiting for a new client')
                 clientSocket, client_addresses = self.sock.accept()
                 print('New client entered')
-                clientSocket.send('Hello this is server'.encode())
+                self.send_msg('Hello this is server',clientSocket)
                 self.count += 1
                 print(self.count)
-                self.handleClient(clientSocket, self.count, client_addresses)
-
+                self.handleClient(clientSocket, client_addresses)
         except socket.error as e:
             print(e)
 
-    def handleClient(self, clientSock,current,adresses):
+    def handleClient(self, clientSock,adresses):
         client_handler = threading.Thread(target=self.handle_client_connection, args=(clientSock,adresses, ))
         client_handler.start()
 
@@ -155,13 +154,21 @@ class Server(object):
                         elif server_data:
                             self.send_msg("Search for recipe failed",client_socket)
                     #______________________________________________
-                    elif arr!=None and arr[0]=="get_recipe_name_and_image" and len(arr)==2:
+                    elif arr!=None and arr[0]=="get_recipe_name_and_image_path" and len(arr)==2:
                         server_data=self.RecipesDb.get_name_and_image_by_ctg_id(arr[1])
                         print("Server data: ", server_data)
                         if server_data:
                             arr_to_send = "#".join(server_data)
                             print(arr_to_send)
                             self.send_msg(arr_to_send,client_socket)
+                    elif arr != None and arr[0] == "get_recipe_name_and_image_data" and len(arr) == 2:
+                        server_data = self.RecipesDb.get_name_and_image_by_ctg_id(arr[1])
+                        image_paths = [s.split('^')[1] for s in server_data]
+                        data = b''
+                        for path in image_paths:
+                            with open(path, 'rb') as f:
+                                data += f.read() + b"|"
+                        self.send_msg(data, client_socket)
                     # _____________________________________________
                     elif arr!=None and arr[0]=="get_ingredients" and len(arr)==2:
                         server_data=self.IngredientsDb.get_ingredients_by_recipe_name(arr[1])
@@ -349,7 +356,7 @@ class Server(object):
                             self.send_msg(arr_to_send,client_socket)
                     # _____________________________________________
                     elif arr != None and arr[0] == "clear_shopping_list" and len(arr) == 3:
-                        arr_ingredients=ast.literal_eval(arr[1])
+                        arr_ingredients=ast.literal_eval(arr[1])# converts from string to actial objects
                         server_data = self.ShoppingListDb.delete_ingredients_by_name_and_username(arr_ingredients,arr[2])
                         print("Server data: ", server_data)
                         if server_data==True:
@@ -358,14 +365,19 @@ class Server(object):
                             self.send_msg("Clearing shopping list failed",client_socket)
                     # _____________________________________________
                     elif arr!=None and arr[0]=="log_out" and len(arr)==1:
-                        self.send_msg("Server is shutting down", client_socket)
-                        client_socket.close()
-                        self.running = False
-                        self.sock.close()
-                    else:
-                        server_data = "False"
-                        self.send_msg(server_data, client_socket)
+                        print(f"Client {adress} logged out.")
+                        break
+                    #     self.send_msg("Server is shutting down", client_socket)
+                    #     client_socket.close()
+                    #     self.running = False
+                    #     self.sock.close()
+                    # else:
+                    #     server_data = "False"
+                    #     self.send_msg(server_data, client_socket)
 
+                    elif arr!= None and arr[0] == "closed" and len(arr) == 1:
+                        print(f"Client {adress} closed the connection.")
+                        break
                 except:
                     print("Error")
                     not_crash=False

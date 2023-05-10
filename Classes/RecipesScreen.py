@@ -27,12 +27,16 @@ class RecipesScreen(tkinter.Toplevel):
             self.client_socket=self.parent.parent.parent.parent.client_socket
             self.send_m=self.parent.parent.parent.parent.send_msg
             self.recv_m=self.parent.parent.parent.parent.recv_msg
+            self.runn=self.parent.parent.parent.parent.running
         elif check==2:
             self.client_socket=self.parent.parent.parent.client_socket
             self.send_m=self.parent.parent.parent.send_msg
             self.recv_m=self.parent.parent.parent.recv_msg
+            self.runn=self.parent.parent.parent.running
 
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def create_gui(self):
         self.head_frame = Frame(self, bg="#658864", highlightbackground="white", highlightthickness=1)
@@ -55,7 +59,6 @@ class RecipesScreen(tkinter.Toplevel):
         #________________________________________________________________________________________________________
         max_width = 80
         wrapped_text = textwrap.fill(self.arr_recipe[5], width=max_width)
-        # print(wrapped_text)
 
         self.title(self.arr_recipe[1])
         self.img_recipe = Image.open(self.arr_recipe[2])
@@ -69,8 +72,9 @@ class RecipesScreen(tkinter.Toplevel):
         self.cooking_time_text=Label(self,text=self.arr_recipe[4],foreground="black",bg="#B5D5C5",font=("Calibri", 13))
         self.cooking_time_text.place(x=150,y=152)
         #______________________________________
-        self.instructuons_text=Label(self,text=wrapped_text,foreground="black",bg="#B5D5C5",font=("Calibri", 12))
-        self.instructuons_text.place(x=30,y=555)
+        self.instructuons_text = Label(self, text=wrapped_text, foreground="black", bg="#B5D5C5", font=("Calibri", 12),
+                                       justify="left")
+        self.instructuons_text.place(x=30, y=555)
         #______________________________________
         ingredient_list = self.get_ingredients(self.client_socket)
         placeY=220
@@ -148,7 +152,8 @@ class RecipesScreen(tkinter.Toplevel):
         # print(data)
         if data == "Ingredient added to table successfully":
             return True
-        else:
+        elif data=="Already exists":
+            messagebox.showinfo("Exists","You already added this product to shopping list.")
             return False
 
     def open_choose_screen(self,arr):
@@ -158,6 +163,12 @@ class RecipesScreen(tkinter.Toplevel):
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.send_m("closed", self.client_socket)
+            self.runn = False
+            self.destroy()
 
 
 class ChooseScreen(tkinter.Toplevel):

@@ -1,4 +1,5 @@
 from RecipesScreen import *
+import os
 
 def create_recipes_screen(self,arr2,client_socket,username):
     frame = Frame(self,bg="#B5D5C5")
@@ -51,13 +52,26 @@ def insert_recipe(self,arr,client_socket,username):
     else:
         return False
 
+def if_exist(self, file_path):
+    return os.path.isfile(file_path)
+
 def get_recipe_image(self,category_id,client_socket):
-    arr = ["get_recipe_name_and_image", str(category_id)]
+    arr = ["get_recipe_name_and_image_path", str(category_id)]
     str_get_recipe_name_and_image= "*".join(arr)
     self.parent.parent.parent.send_msg(str_get_recipe_name_and_image, client_socket)
-    data = self.parent.parent.parent.recv_msg(client_socket)
-    arr = data.split("#")
-    print(arr)
+    images_path = self.parent.parent.parent.recv_msg(client_socket)
+    arr = images_path.split("#")
+    # for x in arr:
+    #     if not if_exist(self,x):
+    #         arr2=["get_recipe_name_and_image_data", str(category_id)]
+    #         str_get_category_image_data = "*".join(arr2)
+    #         self.parent.parent.parent.send_msg(str_get_category_image_data,client_socket)
+    #         data=self.parent.parent.parent.recv_msg(client_socket)
+    #         image_data_list = data.split(b"|")
+    #         for image in image_data_list:
+    #             with open(x,'wb') as f:
+    #                 f.write(image)
+    #                 f.close()
     return arr
 
 class AppetizersScreen(tkinter.Toplevel):
@@ -71,6 +85,8 @@ class AppetizersScreen(tkinter.Toplevel):
         self.iconbitmap('photos/other/icon_recipe.ico')
         self.resizable(False,False)
         self.configure(bg="#B5D5C5")
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.create_gui()
         arr=get_recipe_image(self,1,self.parent.parent.parent.client_socket)
@@ -99,6 +115,11 @@ class AppetizersScreen(tkinter.Toplevel):
         self.parent.deiconify()
         self.destroy()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.send_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()
 
 class SoupsScreen(tkinter.Toplevel):
     def __init__(self,parent,username):
@@ -112,6 +133,9 @@ class SoupsScreen(tkinter.Toplevel):
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         arr = get_recipe_image(self, 2, self.parent.parent.parent.client_socket)
         self.arr_soups = []
         for item in arr:
@@ -138,6 +162,12 @@ class SoupsScreen(tkinter.Toplevel):
         self.parent.deiconify()
         self.destroy()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.send_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()
+
 class MainDishesScreen(tkinter.Toplevel):
     def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
@@ -150,6 +180,9 @@ class MainDishesScreen(tkinter.Toplevel):
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         arr = get_recipe_image(self, 3, self.parent.parent.parent.client_socket)
         self.arr_main_dishes = []
         for item in arr:
@@ -176,6 +209,12 @@ class MainDishesScreen(tkinter.Toplevel):
         self.parent.deiconify()
         self.destroy()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.send_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()
+
 class SaladsScreen(tkinter.Toplevel):
     def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
@@ -188,6 +227,9 @@ class SaladsScreen(tkinter.Toplevel):
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         arr = get_recipe_image(self, 4, self.parent.parent.parent.client_socket)
         self.arr_salads = []
         for item in arr:
@@ -214,6 +256,12 @@ class SaladsScreen(tkinter.Toplevel):
         self.parent.deiconify()
         self.destroy()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.send_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()
+
 class DessertsScreen(tkinter.Toplevel):
     def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
@@ -226,6 +274,9 @@ class DessertsScreen(tkinter.Toplevel):
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         arr = get_recipe_image(self, 5, self.parent.parent.parent.client_socket)
         self.arr_desserts = []
         for item in arr:
@@ -252,6 +303,12 @@ class DessertsScreen(tkinter.Toplevel):
         self.parent.deiconify()
         self.destroy()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.send_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()
+
 class DrinksScreen(tkinter.Toplevel):
     def __init__(self,parent,username):
         self.RecipesDb=RecipesDb()
@@ -264,6 +321,9 @@ class DrinksScreen(tkinter.Toplevel):
         self.configure(bg="#B5D5C5")
         #______________________________________________________________________________________________
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         arr = get_recipe_image(self, 6, self.parent.parent.parent.client_socket)
         self.arr_drinks = []
         for item in arr:
@@ -289,3 +349,9 @@ class DrinksScreen(tkinter.Toplevel):
     def return_back(self):
         self.parent.deiconify()
         self.destroy()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.parent.parent.send_msg("closed", self.parent.parent.parent.client_socket)
+            self.parent.parent.parent.running = False
+            self.destroy()

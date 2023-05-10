@@ -11,9 +11,11 @@ from MainScreen import MainScreen
 SIZE = 10
 
 class StartScreen(tkinter.Tk):
-    def __init__(self):
+    def __init__(self,ip,port):
         self.UserDb=UsersDb()
         super().__init__()
+        self.ip = ip
+        self.port = port
         self.running=True
         self.FORMAT = 'utf-8'
         self.geometry("600x770+20+20")
@@ -25,6 +27,8 @@ class StartScreen(tkinter.Tk):
         self.handle_thread_socket()
         self.create_gui()
 
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def create_gui(self):
         self.canvas=Canvas(self,width=600,height=770,bd=0,highlightthickness=0)
         self.canvas.pack()
@@ -35,9 +39,11 @@ class StartScreen(tkinter.Tk):
         # ________________________________________________________________________________________________________
         self.canvas.create_text(300, 230,text="Tasty Pages",fill="#4E6C50",font=("Calibri",38,"bold"))
         # ________________________________________________________________________________________________________
-        self.buttonLogin=Button(self.canvas,text='LOG IN',background="#C27664",foreground="white",font=("Calibri",18),command=self.open_login_screen)
+        self.buttonLogin=Button(self.canvas,text='LOG IN',background="#C27664",foreground="white",font=("Calibri",18),
+                                activebackground="#C27664", activeforeground="white",command=self.open_login_screen)
         self.buttonLogin.place(x=210,y=320,width=170,height=60)
-        self.buttonSignup=Button(self.canvas, text='SIGN UP', background="#C27664",foreground="white",font=("Calibri",18),command=self.open_signup_screen)
+        self.buttonSignup=Button(self.canvas, text='SIGN UP', background="#C27664",foreground="white",font=("Calibri",18),
+                                 activebackground="#C27664", activeforeground="white",command=self.open_signup_screen)
         self.buttonSignup.place(x=210,y=400,width=170,height=60)
         # ________________________________________________________________________________________________________
 
@@ -57,11 +63,14 @@ class StartScreen(tkinter.Tk):
         client_handler.start()
 
     def create_socket(self):
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client_socket.connect(('127.0.0.1',1803))
-        data = self.client_socket.recv(1024).decode()
-        print("data: "+data)
-        print("hi", self.client_socket)
+        try:
+            self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.client_socket.connect((self.ip,self.port))
+            data = self.recv_msg(self.client_socket)
+            print("data: "+data)
+            print("hi", self.client_socket)
+        except ConnectionRefusedError:
+            messagebox.showerror("Connection Error", "The server is not running yet.\nTry again later.")
 
     def send_msg(self, data, client_socket):
         try:
@@ -98,6 +107,12 @@ class StartScreen(tkinter.Tk):
             print("Error with message receiving:", str(e))
             return None
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.send_msg("closed", self.client_socket)
+            self.running = False
+            self.destroy()
+
 class LoginScreen(tkinter.Toplevel):
     def __init__(self,parent):
         super().__init__(parent)
@@ -110,6 +125,8 @@ class LoginScreen(tkinter.Toplevel):
         self.UserDb = UsersDb()
 
         self.create_gui()
+
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def create_gui(self):
         self.canvas = Canvas(self, width=600, height=770, bd=0, highlightthickness=0)
@@ -129,11 +146,12 @@ class LoginScreen(tkinter.Toplevel):
         self.entryPasswordLogin = Entry(self, width=70,show="*")
         self.entryPasswordLogin.place(x=95, y=380)
         # ________________________________________________________________________________________________________
-        self.buttonEnterUserLogin = Button(self, text="Log In", background="#C27664", foreground="white", font=("Calibri", 17),command=self.login_user)
+        self.buttonEnterUserLogin = Button(self, text="Log In", background="#C27664", foreground="white", font=("Calibri", 17),
+                                           activebackground="#C27664", activeforeground="white",command=self.login_user)
         self.buttonEnterUserLogin .place(x=230, y=450, width=140, height=50)
         # ________________________________________________________________________________________________________
         self.buttonReturnToStartScreen = Button(self, text='Return Back', background="#C27664", foreground="white", font=("Calibri", 14),
-                          command=self.return_back)
+                          activebackground="#C27664", activeforeground="white",command=self.return_back)
         self.buttonReturnToStartScreen.place(x=245, y=530)
         # ________________________________________________________________________________________________________
         self.str = StringVar()
@@ -170,8 +188,15 @@ class LoginScreen(tkinter.Toplevel):
         self.parent.deiconify() #displays the window, after using the withdraw method
         self.destroy()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close the app?"):
+            self.parent.send_msg("closed", self.parent.client_socket)
+            self.parent.running = False
+            self.destroy()
 
 if __name__ == "__main__":
-    window = StartScreen()
+    ip = '127.0.0.1'
+    port = 1803
+    window = StartScreen(ip,port)
     window.mainloop()
 
