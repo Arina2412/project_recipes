@@ -386,7 +386,7 @@ class Server(object):
 
 
 if __name__ == '__main__':
-   ip = '0.0.0.0'
+   ip = '10.20.4.30'
    port = 1803
    S = Server(ip, port)
    S.start()
