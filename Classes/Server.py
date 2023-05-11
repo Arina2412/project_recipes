@@ -45,19 +45,20 @@ class Server(object):
 
     def send_msg(self, data, client_socket):
         try:
-            print("Message: " + str(data))
+            print("Sending____________________\nMessage: " + str(data))
             if type(data) != bytes:
                 data = data.encode()
             length = str(len(data)).zfill(SIZE)
             length = length.encode(self.FORMAT)
             message = length + data
-            print("Message with length: " + str(message))
+            print("Message with length: " + str(message)+"\n______________________________________________")
             client_socket.send(message)
         except:
             print("Error with message sending from server")
 
     def recv_msg(self, client_socket, m_type="string"):
         try:
+            print("Receiving_________________")
             length = client_socket.recv(SIZE).decode(self.FORMAT)
             if not length:
                 print("No length")
@@ -385,7 +386,7 @@ class Server(object):
 
 
 if __name__ == '__main__':
-   ip = '127.0.0.1'
+   ip = '0.0.0.0'
    port = 1803
    S = Server(ip, port)
    S.start()
